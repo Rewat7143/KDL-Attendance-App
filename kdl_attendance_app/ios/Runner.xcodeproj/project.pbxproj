@@ -16,6 +16,11 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		E423511BC49090FC1BFCD06B /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72E09D43F334B430284EB41E /* Pods_Runner.framework */; };
+		F83850CA2DE882690056EA66 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = F83850C92DE882690056EA66 /* FirebaseAI */; };
+		F83850CC2DE882690056EA66 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = F83850CB2DE882690056EA66 /* FirebaseAnalytics */; };
+		F83850CE2DE882690056EA66 /* FirebaseAnalyticsOnDeviceConversion in Frameworks */ = {isa = PBXBuildFile; productRef = F83850CD2DE882690056EA66 /* FirebaseAnalyticsOnDeviceConversion */; };
+		F83850D02DE882690056EA66 /* FirebaseAnalyticsWithoutAdIdSupport in Frameworks */ = {isa = PBXBuildFile; productRef = F83850CF2DE882690056EA66 /* FirebaseAnalyticsWithoutAdIdSupport */; };
+		F83850D22DE882690056EA66 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = F83850D12DE882690056EA66 /* FirebaseAppCheck */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,6 +86,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				E423511BC49090FC1BFCD06B /* Pods_Runner.framework in Frameworks */,
+				F83850D02DE882690056EA66 /* FirebaseAnalyticsWithoutAdIdSupport in Frameworks */,
+				F83850CA2DE882690056EA66 /* FirebaseAI in Frameworks */,
+				F83850CC2DE882690056EA66 /* FirebaseAnalytics in Frameworks */,
+				F83850D22DE882690056EA66 /* FirebaseAppCheck in Frameworks */,
+				F83850CE2DE882690056EA66 /* FirebaseAnalyticsOnDeviceConversion in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -237,6 +247,9 @@
 				Base,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
+			packageReferences = (
+				F83850C82DE882690056EA66 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -315,9 +328,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -473,7 +490,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 9XYPJ8ST44;
+				DEVELOPMENT_TEAM = V3K96369ZC;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -481,7 +498,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.vpolinati.kdl-attendance-app";
+				PRODUCT_BUNDLE_IDENTIFIER = "--com.reddyrewat.kdlattendance";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -660,7 +677,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 9XYPJ8ST44;
+				DEVELOPMENT_TEAM = V3K96369ZC;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -668,7 +685,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.vpolinati.kdl-attendance-app";
+				PRODUCT_BUNDLE_IDENTIFIER = "--com.reddyrewat.kdlattendance";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -684,7 +701,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 9XYPJ8ST44;
+				DEVELOPMENT_TEAM = V3K96369ZC;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -692,7 +709,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.vpolinati.kdl-attendance-app";
+				PRODUCT_BUNDLE_IDENTIFIER = "--com.reddyrewat.kdlattendance";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -734,6 +751,45 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F83850C82DE882690056EA66 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.13.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F83850C92DE882690056EA66 /* FirebaseAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F83850C82DE882690056EA66 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAI;
+		};
+		F83850CB2DE882690056EA66 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F83850C82DE882690056EA66 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		F83850CD2DE882690056EA66 /* FirebaseAnalyticsOnDeviceConversion */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F83850C82DE882690056EA66 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsOnDeviceConversion;
+		};
+		F83850CF2DE882690056EA66 /* FirebaseAnalyticsWithoutAdIdSupport */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F83850C82DE882690056EA66 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsWithoutAdIdSupport;
+		};
+		F83850D12DE882690056EA66 /* FirebaseAppCheck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F83850C82DE882690056EA66 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAppCheck;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 97C146E61CF9000F007C117D /* Project object */;
 }

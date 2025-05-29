@@ -1881,7 +1881,9 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                                   Text(
                                     'Check In',
                                     style: TextStyle(
-                                      color: _isWithinRange ? Colors.blue : Colors.grey,
+                                      color: _isWithinRange
+                                          ? Colors.blue
+                                          : Colors.grey,
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                     ),
