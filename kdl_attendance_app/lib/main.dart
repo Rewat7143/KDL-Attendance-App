@@ -8,13 +8,15 @@ import 'dart:async';
 
 // Simple auth service
 class AuthService {
-  Future<bool> signInWithEmail({required String email, required String password}) async {
+  Future<bool> signInWithEmail(
+      {required String email, required String password}) async {
     // For testing purposes, accept test@example.com with password123
     if ((email == 'test@example.com' && password == 'password123') ||
         (email.contains('@') && password.length >= 6)) {
       return true;
     }
-    throw Exception('Invalid credentials - Please use test@example.com and password123');
+    throw Exception(
+        'Invalid credentials - Please use test@example.com and password123');
   }
 
   Future<bool> signUpWithEmail({
@@ -29,7 +31,8 @@ class AuthService {
     throw Exception('Invalid input');
   }
 
-  Future<bool> adminSignIn({required String username, required String password}) async {
+  Future<bool> adminSignIn(
+      {required String username, required String password}) async {
     // Simple admin validation
     if (username == 'admin' && password == 'admin123') {
       return true;
@@ -40,8 +43,10 @@ class AuthService {
 
 class AttendanceService {
   static const String _attendanceKey = 'attendance_records';
-  static const double _officeLatitude = 17.724610; // Replace with actual office coordinates
-  static const double _officeLongitude = 83.314066; // Replace with actual office coordinates
+  static const double _officeLatitude =
+      17.724610; // Replace with actual office coordinates
+  static const double _officeLongitude =
+      83.314066; // Replace with actual office coordinates
   static const double _maxDistance = 200; // Maximum distance in meters
 
   final LocalAuthentication _localAuth = LocalAuthentication();
@@ -130,7 +135,7 @@ class AttendanceService {
 
       String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
       String currentTime = DateFormat('HH:mm').format(DateTime.now());
-      
+
       // Save attendance record
       Map<String, dynamic> record = {
         'date': today,
@@ -150,7 +155,7 @@ class AttendanceService {
     // Define work hours (e.g., 9:00 AM start time)
     DateTime startTime = DateTime.parse('2000-01-01 09:00:00');
     DateTime checkIn = DateTime.parse('2000-01-01 $checkInTime:00');
-    
+
     if (checkIn.isAfter(startTime.add(const Duration(minutes: 30)))) {
       return 'late';
     }
@@ -159,7 +164,7 @@ class AttendanceService {
 
   AttendanceStats getAttendanceStats() {
     List<String> records = _prefs.getStringList(_attendanceKey) ?? [];
-    
+
     // Get current month's records
     String currentMonth = DateFormat('yyyy-MM').format(DateTime.now());
     List<DateTime> monthRecords = records
@@ -205,6 +210,199 @@ class AttendanceStats {
     required this.lateDays,
     required this.absentDays,
   });
+}
+
+// Add this at the top level, before MyApp class
+class _EmployeeDetailsSheet extends StatelessWidget {
+  final Map<String, dynamic> employee;
+  const _EmployeeDetailsSheet({required this.employee});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.75,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFF23242A),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Stack(
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: ListView(
+                  controller: scrollController,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Employee Details',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 22)),
+                        IconButton(
+                          icon: const Icon(Icons.close,
+                              color: Colors.white, size: 28),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundImage: NetworkImage(employee['avatar']),
+                          radius: 36,
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(employee['name'],
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 22)),
+                              const SizedBox(height: 4),
+                              Text(employee['role'],
+                                  style: const TextStyle(
+                                      color: Colors.white70, fontSize: 16)),
+                              Text(employee['department'],
+                                  style: const TextStyle(
+                                      color: Colors.white54, fontSize: 15)),
+                              Text('Started: ${employee['startDate']}',
+                                  style: const TextStyle(
+                                      color: Colors.white54, fontSize: 14)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
+                    const Text('Contact Information',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18)),
+                    const SizedBox(height: 8),
+                    const Text('Email',
+                        style: TextStyle(color: Colors.white70, fontSize: 15)),
+                    Text(employee['email'],
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 16)),
+                    const SizedBox(height: 28),
+                    const Text('Shift Information',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18)),
+                    const SizedBox(height: 8),
+                    const Text('Working Hours:',
+                        style: TextStyle(color: Colors.white70, fontSize: 15)),
+                    Text(employee['workingHours'],
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 16)),
+                    const SizedBox(height: 28),
+                    const Text('Attendance Summary',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18)),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Column(
+                          children: const [
+                            Text('Present',
+                                style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16)),
+                            SizedBox(height: 4),
+                            Text('20',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 18)),
+                          ],
+                        ),
+                        Column(
+                          children: const [
+                            Text('Late',
+                                style: TextStyle(
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16)),
+                            SizedBox(height: 4),
+                            Text('2',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 18)),
+                          ],
+                        ),
+                        Column(
+                          children: const [
+                            Text('Absent',
+                                style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16)),
+                            SizedBox(height: 4),
+                            Text('1',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 18)),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                  color: Colors.white54, width: 2),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: const Text('Close',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 18)),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2196F3),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: const Text('Export Data',
+                                style: TextStyle(fontSize: 18)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 void main() {
@@ -366,7 +564,7 @@ class _EmployeeLoginPageState extends State<EmployeeLoginPage> {
       userName = userName[0].toUpperCase() + userName.substring(1);
 
       // For testing purposes, allow direct login
-      if (_emailController.text == 'test@example.com' && 
+      if (_emailController.text == 'test@example.com' &&
           _passwordController.text == 'password123') {
         if (mounted) {
           Navigator.pushReplacement(
@@ -379,7 +577,7 @@ class _EmployeeLoginPageState extends State<EmployeeLoginPage> {
         return;
       }
 
-      if (_emailController.text.contains('@') && 
+      if (_emailController.text.contains('@') &&
           _passwordController.text.length >= 6) {
         if (mounted) {
           Navigator.pushReplacement(
@@ -566,18 +764,16 @@ class _EmployeeLoginPageState extends State<EmployeeLoginPage> {
                             color: Color(0xFF2196F3),
                             fontWeight: FontWeight.bold,
                           ),
-                          recognizer:
-                              TapGestureRecognizer()
-                                ..onTap = () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) =>
-                                              const EmployeeSignUpPage(),
-                                    ),
-                                  );
-                                },
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const EmployeeSignUpPage(),
+                                ),
+                              );
+                            },
                         ),
                       ],
                     ),
@@ -828,11 +1024,10 @@ class _EmployeeSignUpPageState extends State<EmployeeSignUpPage> {
                             color: Color(0xFF2196F3),
                             fontWeight: FontWeight.bold,
                           ),
-                          recognizer:
-                              TapGestureRecognizer()
-                                ..onTap = () {
-                                  Navigator.pop(context);
-                                },
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.pop(context);
+                            },
                         ),
                       ],
                     ),
@@ -884,9 +1079,11 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         password: _passwordController.text,
       );
       if (mounted) {
-        // TODO: Navigate to admin dashboard
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Admin login successful!')),
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AdminDashboardPage(),
+          ),
         );
       }
     } catch (e) {
@@ -1015,7 +1212,12 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 height: 56,
                 child: OutlinedButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AdminDashboardPage(),
+                      ),
+                    );
                   },
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
@@ -1185,7 +1387,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
 class EmployeeDashboard extends StatefulWidget {
   final String userName;
-  
+
   const EmployeeDashboard({
     super.key,
     required this.userName,
@@ -1241,16 +1443,16 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
 
   Future<void> _initializeAttendance() async {
     if (_isInitialized) return;
-    
+
     try {
       await _attendanceService.init();
       await _updateLocation();
       _updateStats();
-      
+
       // Start periodic updates only after initial setup
       _startLocationUpdates();
       _startStatsUpdates();
-      
+
       if (mounted) {
         setState(() {
           _isInitialized = true;
@@ -1295,7 +1497,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
 
   void _updateStats() {
     if (!mounted) return;
-    
+
     setState(() {
       _stats = _attendanceService.getAttendanceStats();
     });
@@ -1423,7 +1625,8 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today, color: Colors.blue, size: 20),
+                      const Icon(Icons.calendar_today,
+                          color: Colors.blue, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         formattedDate,
@@ -1436,7 +1639,8 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                   ),
                   Row(
                     children: [
-                      const Icon(Icons.access_time, color: Colors.blue, size: 20),
+                      const Icon(Icons.access_time,
+                          color: Colors.blue, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         formattedTime,
@@ -1500,7 +1704,9 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: _isWithinRange ? Colors.greenAccent : Colors.red,
+                              color: _isWithinRange
+                                  ? Colors.greenAccent
+                                  : Colors.red,
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -1511,7 +1717,9 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                     SizedBox(
                       width: double.infinity,
                       child: TextButton(
-                        onPressed: _isWithinRange && !_isLoading ? _handleCheckIn : null,
+                        onPressed: _isWithinRange && !_isLoading
+                            ? _handleCheckIn
+                            : null,
                         style: TextButton.styleFrom(
                           backgroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1525,7 +1733,8 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.blue),
                                 ),
                               )
                             : const Text(
@@ -1566,7 +1775,8 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                   ),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_month, color: Colors.blue, size: 20),
+                      const Icon(Icons.calendar_month,
+                          color: Colors.blue, size: 20),
                       const SizedBox(width: 4),
                       Text(
                         DateFormat('MMMM yyyy').format(DateTime.now()),
@@ -1801,3 +2011,1140 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
   }
 }
 
+class AdminDashboardPage extends StatefulWidget {
+  const AdminDashboardPage({super.key});
+
+  @override
+  State<AdminDashboardPage> createState() => _AdminDashboardPageState();
+}
+
+class _AdminDashboardPageState extends State<AdminDashboardPage> {
+  int selectedTabIndex = 0; // 0: Employees, 1: Attendance, 2: Settings
+
+  // Example attendance data
+  final List<Map<String, dynamic>> attendanceRecords = [
+    {
+      'date': '2025-05-28',
+      'name': 'John Doe',
+      'avatar': 'https://randomuser.me/api/portraits/men/1.jpg',
+      'checkIn': '4:48 PM',
+      'checkOut': '4:48 PM',
+      'status': 'PRESENT',
+      'note': 'Early checkout: jampallu konukovali',
+    },
+    // Add more records as needed
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF181A20),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF181A20),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('Admin Dashboard',
+            style: TextStyle(color: Colors.white)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const HomePage()),
+                (route) => false,
+              );
+            },
+            child: const Text('Logout',
+                style: TextStyle(color: Color(0xFF2196F3))),
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 16),
+            // Search bar
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF23242A),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const TextField(
+                style: TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Search employees or departments...',
+                  hintStyle: TextStyle(color: Colors.grey),
+                  border: InputBorder.none,
+                  prefixIcon: Icon(Icons.search, color: Colors.grey),
+                  contentPadding: EdgeInsets.symmetric(vertical: 18),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Tab bar
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildTabButton('Employees', 0),
+                  const SizedBox(width: 8),
+                  _buildTabButton('Attendance', 1),
+                  const SizedBox(width: 8),
+                  _buildTabButton('Settings', 2),
+                  if (selectedTabIndex == 1) ...[
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.download, color: Colors.white),
+                      label: const Text('Export CSV'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2196F3),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Tab content
+            if (selectedTabIndex == 0)
+              _buildEmployeesTab()
+            else if (selectedTabIndex == 1)
+              _buildAttendanceTab()
+            else
+              _buildSettingsTab(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabButton(String label, int index) {
+    final bool isSelected = selectedTabIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => selectedTabIndex = index),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+              color: isSelected ? const Color(0xFF2196F3) : Colors.transparent),
+          color: isSelected ? Colors.transparent : Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          child: Row(
+            children: [
+              Icon(
+                index == 0
+                    ? Icons.people_alt_outlined
+                    : index == 1
+                        ? Icons.calendar_month
+                        : Icons.settings,
+                color: isSelected ? const Color(0xFF2196F3) : Colors.grey,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? const Color(0xFF2196F3) : Colors.grey,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmployeesTab() {
+    // Demo employee list
+    final employees = [
+      {
+        'id': '1',
+        'name': 'John Doe',
+        'role': 'Software Engineer',
+        'department': 'Engineering',
+        'startDate': '2022-01-15',
+        'avatar': 'https://randomuser.me/api/portraits/men/1.jpg',
+        'email': 'john.doe@kalamdreamlabs.com',
+        'workingHours': '09:00 -17:00',
+      },
+      {
+        'id': '2',
+        'name': 'Jane Smith',
+        'role': 'UI/UX Designer',
+        'department': 'Design',
+        'startDate': '2022-03-10',
+        'avatar': 'https://randomuser.me/api/portraits/women/2.jpg',
+        'email': 'jane.smith@kalamdreamlabs.com',
+        'workingHours': '09:00 -17:00',
+      },
+      {
+        'id': '3',
+        'name': 'Michael Johnson',
+        'role': 'Marketing Manager',
+        'department': 'Marketing',
+        'startDate': '2021-11-05',
+        'avatar': 'https://randomuser.me/api/portraits/men/3.jpg',
+        'email': 'michael.johnson@kalamdreamlabs.com',
+        'workingHours': '09:00 -17:00',
+      },
+      {
+        'id': '4',
+        'name': 'Vinod',
+        'role': 'Jr. SDE',
+        'department': 'AI&DS',
+        'startDate': '2025-05-28',
+        'avatar': 'https://randomuser.me/api/portraits/men/4.jpg',
+        'email': 'vinod@kalamdreamlabs.com',
+        'workingHours': '09:00 -17:00',
+      },
+    ];
+
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('All Employees (${employees.length})',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold)),
+              const Spacer(),
+              SizedBox(
+                height: 40,
+                child: ElevatedButton.icon(
+                  onPressed: () => _showAddEmployeeDialog(context),
+                  icon: const Icon(Icons.person_add_alt_1,
+                      color: Colors.white, size: 20),
+                  label: const Text('Add',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2196F3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 18, vertical: 0),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: ListView.builder(
+              itemCount: employees.length,
+              itemBuilder: (context, index) {
+                final emp = employees[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF23242A),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) =>
+                            _EmployeeDetailsSheet(employee: emp),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: NetworkImage(emp['avatar']!),
+                            radius: 32,
+                          ),
+                          const SizedBox(width: 18),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(emp['name']!,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20)),
+                                const SizedBox(height: 2),
+                                Text(emp['role']!,
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 16)),
+                                Text(emp['department']!,
+                                    style: const TextStyle(
+                                        color: Colors.white54, fontSize: 15)),
+                                Text('Started: ${emp['startDate']!}',
+                                    style: const TextStyle(
+                                        color: Colors.grey, fontSize: 14)),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right,
+                              color: Colors.white, size: 28),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAttendanceTab() {
+    return Expanded(
+      child: ListView(
+        children: [
+          const Text(
+            'Recent Attendance',
+            style: TextStyle(
+                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          ...attendanceRecords
+              .map((record) => _buildAttendanceCard(record))
+              .toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAttendanceCard(Map<String, dynamic> record) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF23242A),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Date and status
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    (record['date'] ?? '').toString(),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'PRESENT',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(color: Colors.white24, height: 24),
+            // Employee info
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  backgroundImage: NetworkImage(record['avatar']),
+                  radius: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        record['name'],
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Text(
+                        'Check In: ${record['checkIn']}',
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 15),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Text(
+                        'Check Out: ${record['checkOut']}',
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 15),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      if (record['note'] != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            record['note'],
+                            style: const TextStyle(
+                                color: Colors.amber,
+                                fontStyle: FontStyle.italic,
+                                fontSize: 15),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsTab() {
+    // Settings UI as per the provided image
+    final addressController = TextEditingController(text: _address);
+    final latitudeController = TextEditingController(text: _latitude);
+    final longitudeController = TextEditingController(text: _longitude);
+    final maxDistanceController = TextEditingController(text: _maxDistance);
+
+    return Expanded(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Admin Settings Card
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 18),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF23242A),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Admin Settings',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20)),
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showChangePasswordDialog(context),
+                        icon:
+                            const Icon(Icons.lock_outline, color: Colors.white),
+                        label: const Text('Change Admin Password',
+                            style: TextStyle(fontSize: 18)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2196F3),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Office Location Card
+              Container(
+                margin: const EdgeInsets.only(bottom: 18),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF23242A),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Office Location',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20)),
+                    const SizedBox(height: 16),
+                    const Text('Address',
+                        style: TextStyle(color: Colors.white70, fontSize: 16)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: addressController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: const Color(0xFF181A20),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 12),
+                      ),
+                      onChanged: (val) => _address = val,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Latitude',
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 16)),
+                              const SizedBox(height: 6),
+                              TextField(
+                                controller: latitudeController,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: const Color(0xFF181A20),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 16, horizontal: 12),
+                                ),
+                                onChanged: (val) => _latitude = val,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Longitude',
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 16)),
+                              const SizedBox(height: 6),
+                              TextField(
+                                controller: longitudeController,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: const Color(0xFF181A20),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 16, horizontal: 12),
+                                ),
+                                onChanged: (val) => _longitude = val,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Max Check-in Distance (meters)',
+                        style: TextStyle(color: Colors.white70, fontSize: 16)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: maxDistanceController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: const Color(0xFF181A20),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 12),
+                      ),
+                      onChanged: (val) => _maxDistance = val,
+                    ),
+                  ],
+                ),
+              ),
+              // Working Hours Card
+              Container(
+                margin: const EdgeInsets.only(bottom: 18),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF23242A),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Working Hours',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20)),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Start Time',
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 16)),
+                              const SizedBox(height: 6),
+                              GestureDetector(
+                                onTap: () async {
+                                  TimeOfDay? picked = await showTimePicker(
+                                    context: context,
+                                    initialTime: _startTime,
+                                  );
+                                  if (picked != null) {
+                                    setState(() => _startTime = picked);
+                                  }
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF181A20),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 12),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                          _startTime.hour
+                                              .toString()
+                                              .padLeft(2, '0'),
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 22)),
+                                      const Text(' : ',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 22)),
+                                      Text(
+                                          _startTime.minute
+                                              .toString()
+                                              .padLeft(2, '0'),
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 22)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('End Time',
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 16)),
+                              const SizedBox(height: 6),
+                              GestureDetector(
+                                onTap: () async {
+                                  TimeOfDay? picked = await showTimePicker(
+                                    context: context,
+                                    initialTime: _endTime,
+                                  );
+                                  if (picked != null) {
+                                    setState(() => _endTime = picked);
+                                  }
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF181A20),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 12),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                          _endTime.hour
+                                              .toString()
+                                              .padLeft(2, '0'),
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 22)),
+                                      const Text(' : ',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 22)),
+                                      Text(
+                                          _endTime.minute
+                                              .toString()
+                                              .padLeft(2, '0'),
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 22)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Save Changes Button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _address = addressController.text;
+                      _latitude = latitudeController.text;
+                      _longitude = longitudeController.text;
+                      _maxDistance = maxDistanceController.text;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Settings saved successfully!')),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2196F3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Save Changes',
+                      style: TextStyle(fontSize: 18)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // State variables for settings
+  String _address = 'Kalam Dream Labs';
+  String _latitude = '17.724';
+  String _longitude = '83.313';
+  String _maxDistance = '250';
+  TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay _endTime = const TimeOfDay(hour: 17, minute: 0);
+
+  void _showChangePasswordDialog(BuildContext context) {
+    final oldPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF23242A),
+          title: const Text('Change Admin Password',
+              style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: oldPasswordController,
+                obscureText: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Old Password',
+                  labelStyle: TextStyle(color: Colors.white70),
+                ),
+              ),
+              TextField(
+                controller: newPasswordController,
+                obscureText: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'New Password',
+                  labelStyle: TextStyle(color: Colors.white70),
+                ),
+              ),
+              TextField(
+                controller: confirmPasswordController,
+                obscureText: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Confirm New Password',
+                  labelStyle: TextStyle(color: Colors.white70),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (newPasswordController.text !=
+                    confirmPasswordController.text) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Passwords do not match!')),
+                  );
+                  return;
+                }
+                // For demo, just show success
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Password changed successfully!')),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2196F3),
+              ),
+              child: const Text('Change'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showAddEmployeeDialog(BuildContext context) {
+    final nameController = TextEditingController();
+    final roleController = TextEditingController();
+    final departmentController = TextEditingController();
+    final startDateController = TextEditingController();
+    final avatarController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF23242A),
+          title:
+              const Text('Add Employee', style: TextStyle(color: Colors.white)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    labelStyle: TextStyle(color: Colors.white70),
+                  ),
+                ),
+                TextField(
+                  controller: roleController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Role',
+                    labelStyle: TextStyle(color: Colors.white70),
+                  ),
+                ),
+                TextField(
+                  controller: departmentController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Department',
+                    labelStyle: TextStyle(color: Colors.white70),
+                  ),
+                ),
+                TextField(
+                  controller: startDateController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Start Date (YYYY-MM-DD)',
+                    labelStyle: TextStyle(color: Colors.white70),
+                  ),
+                ),
+                TextField(
+                  controller: avatarController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Avatar URL',
+                    labelStyle: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Here you would add logic to actually add the employee
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2196F3),
+              ),
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// Placeholder for employee attendance page with demo data
+class EmployeeAttendancePage extends StatelessWidget {
+  final Map<String, dynamic> employee;
+  const EmployeeAttendancePage({super.key, required this.employee});
+
+  @override
+  Widget build(BuildContext context) {
+    // Demo attendance data for each employee
+    final List<Map<String, String>> attendance = [
+      {
+        'date': '2024-06-01',
+        'checkIn': '09:05 AM',
+        'checkOut': '05:45 PM',
+        'status': 'Present',
+      },
+      {
+        'date': '2024-05-31',
+        'checkIn': '09:20 AM',
+        'checkOut': '05:30 PM',
+        'status': 'Late',
+      },
+      {
+        'date': '2024-05-30',
+        'checkIn': '09:00 AM',
+        'checkOut': '05:50 PM',
+        'status': 'Present',
+      },
+      {
+        'date': '2024-05-29',
+        'checkIn': 'Absent',
+        'checkOut': '-',
+        'status': 'Absent',
+      },
+      {
+        'date': '2024-05-28',
+        'checkIn': '09:10 AM',
+        'checkOut': '05:40 PM',
+        'status': 'Present',
+      },
+    ];
+
+    Color statusColor(String status) {
+      switch (status) {
+        case 'Present':
+          return Colors.green;
+        case 'Late':
+          return Colors.orange;
+        case 'Absent':
+          return Colors.red;
+        default:
+          return Colors.grey;
+      }
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF181A20),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF181A20),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 28),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '${employee['name']} Attendance',
+          style: const TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22),
+        ),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Employee Profile Card
+            Container(
+              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF23242A),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: employee['avatar'] != null
+                        ? NetworkImage(employee['avatar'])
+                        : null,
+                    radius: 36,
+                    backgroundColor: Colors.white24,
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(employee['name'],
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 22)),
+                        const SizedBox(height: 4),
+                        Text(employee['role'],
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 16)),
+                        Text(employee['department'],
+                            style: const TextStyle(
+                                color: Colors.white54, fontSize: 15)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Text('Attendance Records',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18)),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView.separated(
+                itemCount: attendance.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 14),
+                itemBuilder: (context, index) {
+                  final record = attendance[index];
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF23242A),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.10),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16, horizontal: 18),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Status Dot
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: statusColor(record['status'] ?? ''),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Attendance Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      record['date'] ?? '',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    record['status'] ?? '',
+                                    style: TextStyle(
+                                      color:
+                                          statusColor(record['status'] ?? ''),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text('Check In: ${record['checkIn']}',
+                                  style: const TextStyle(
+                                      color: Colors.white70, fontSize: 15)),
+                              Text('Check Out: ${record['checkOut']}',
+                                  style: const TextStyle(
+                                      color: Colors.white70, fontSize: 15)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
