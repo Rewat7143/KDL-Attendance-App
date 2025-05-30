@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.kdlAttendanceApp.RunnerTests</string>
+	<string>com.example.kdlAttendanceApp</string>
 	<key>PROJECT_ID</key>
 	<string>kalam-dream-labs</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:914608974935:ios:9aab7dd6bbfe8aab8a8712</string>
+	<string>1:914608974935:ios:5c62c4f3ae1139418a8712</string>
 </dict>
 </plist>
