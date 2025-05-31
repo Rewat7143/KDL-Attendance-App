@@ -1,0 +1,2 @@
+/Users/minto/Developer/KDL-Attendance-App/kdl_attendance_app/android/app/.cxx/Debug/3z6l175b/x86_64/CMakeFiles/edit_cache.dir
+/Users/minto/Developer/KDL-Attendance-App/kdl_attendance_app/android/app/.cxx/Debug/3z6l175b/x86_64/CMakeFiles/rebuild_cache.dir

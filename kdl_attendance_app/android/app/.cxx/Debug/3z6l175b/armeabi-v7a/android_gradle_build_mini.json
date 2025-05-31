@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "/Users/minto/flutter/packages/flutter_tools/gradle/src/main/groovy/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/minto/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/minto/Developer/KDL-Attendance-App/kdl_attendance_app/android/app/.cxx/Debug/3z6l175b/armeabi-v7a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/minto/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/minto/Developer/KDL-Attendance-App/kdl_attendance_app/android/app/.cxx/Debug/3z6l175b/armeabi-v7a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {}
+}
