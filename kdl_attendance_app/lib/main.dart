@@ -4,6 +4,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'services/firebase_auth_service.dart';
 import 'dart:async';
 
 // Simple auth service
@@ -405,8 +408,24 @@ class _EmployeeDetailsSheet extends StatelessWidget {
   }
 }
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "AIzaSyDxo0DF8yYsHjuYZcuLmfNn2OrWCft90-o",
+        appId: "1:914608974935:ios:64310cf4f84b8f218a8712",
+        messagingSenderId: "914608974935",
+        projectId: "kalam-dream-labs",
+        storageBucket: "kalam-dream-labs.firebasestorage.app",
+      ),
+    );
+    debugPrint('Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('Error initializing Firebase: $e');
+  }
+
   runApp(const MyApp());
 }
 
@@ -1050,21 +1069,20 @@ class AdminLoginPage extends StatefulWidget {
 }
 
 class _AdminLoginPageState extends State<AdminLoginPage> {
-  final _authService = AuthService();
-  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _signIn() async {
-    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields')),
       );
@@ -1074,10 +1092,11 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      await _authService.adminSignIn(
-        username: _usernameController.text.trim(),
+      await FirebaseAuthService.signInAdmin(
+        email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -1089,7 +1108,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
+          SnackBar(content: Text(e.toString())),
         );
       }
     } finally {
@@ -1147,17 +1166,17 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
               ),
               const SizedBox(height: 24),
               TextField(
-                controller: _usernameController,
+                controller: _emailController,
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.person_outline),
-                  hintText: 'Admin Username',
+                  prefixIcon: const Icon(Icons.email_outlined),
+                  hintText: 'Admin Email',
                   filled: true,
-                  fillColor: Color(0xFFF6F7FA),
+                  fillColor: const Color(0xFFF6F7FA),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: EdgeInsets.symmetric(vertical: 20),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 20),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1165,15 +1184,15 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(Icons.lock_outline),
                   hintText: 'Admin Password',
                   filled: true,
-                  fillColor: Color(0xFFF6F7FA),
+                  fillColor: const Color(0xFFF6F7FA),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: EdgeInsets.symmetric(vertical: 20),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 20),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
@@ -1212,12 +1231,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 height: 56,
                 child: OutlinedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AdminDashboardPage(),
-                      ),
-                    );
+                    Navigator.pop(context);
                   },
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
@@ -1237,7 +1251,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 padding: EdgeInsets.only(bottom: 24.0),
                 child: Center(
                   child: Text(
-                    'Default admin credentials: username: admin, password: admin123',
+                    'Use your admin email and password to sign in',
                     style: TextStyle(color: Colors.grey, fontSize: 15),
                     textAlign: TextAlign.center,
                   ),
@@ -2169,6 +2183,24 @@ class AdminDashboardPage extends StatefulWidget {
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int selectedTabIndex = 0; // 0: Employees, 1: Attendance, 2: Settings
 
+  Future<void> _handleLogout() async {
+    try {
+      await FirebaseAuthService.signOut();
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const HomePage()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error signing out: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
   // Example attendance data
   final List<Map<String, dynamic>> attendanceRecords = [
     {
@@ -2198,12 +2230,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             style: TextStyle(color: Colors.white)),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const HomePage()),
-                (route) => false,
-              );
-            },
+            onPressed: _handleLogout,
             child: const Text('Logout',
                 style: TextStyle(color: Color(0xFF2196F3))),
           ),
@@ -2928,72 +2955,119 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final oldPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
+    bool isLoading = false;
+
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF23242A),
-          title: const Text('Change Admin Password',
-              style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: oldPasswordController,
-                obscureText: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Old Password',
-                  labelStyle: TextStyle(color: Colors.white70),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF23242A),
+              title: const Text('Change Admin Password',
+                  style: TextStyle(color: Colors.white)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: oldPasswordController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'Current Password',
+                      labelStyle: TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                  TextField(
+                    controller: newPasswordController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'New Password',
+                      labelStyle: TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                  TextField(
+                    controller: confirmPasswordController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'Confirm New Password',
+                      labelStyle: TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel',
+                      style: TextStyle(color: Colors.grey)),
                 ),
-              ),
-              TextField(
-                controller: newPasswordController,
-                obscureText: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'New Password',
-                  labelStyle: TextStyle(color: Colors.white70),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          if (newPasswordController.text !=
+                              confirmPasswordController.text) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('New passwords do not match'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          setState(() => isLoading = true);
+
+                          try {
+                            await FirebaseAuthService.changeAdminPassword(
+                              currentPassword: oldPasswordController.text,
+                              newPassword: newPasswordController.text,
+                            );
+
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text('Password changed successfully'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(e.toString()),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          } finally {
+                            if (context.mounted) {
+                              setState(() => isLoading = false);
+                            }
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2196F3),
+                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Change Password'),
                 ),
-              ),
-              TextField(
-                controller: confirmPasswordController,
-                obscureText: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Confirm New Password',
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (newPasswordController.text !=
-                    confirmPasswordController.text) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Passwords do not match!')),
-                  );
-                  return;
-                }
-                // For demo, just show success
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Password changed successfully!')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2196F3),
-              ),
-              child: const Text('Change'),
-            ),
-          ],
+              ],
+            );
+          },
         );
       },
     );
