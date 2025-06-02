@@ -8,6 +8,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_auth_service.dart';
 import 'dart:async';
+import 'package:flutter/services.dart';
+import 'services/employee_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Simple auth service
 class AuthService {
@@ -235,7 +238,8 @@ class _EmployeeDetailsSheet extends StatelessWidget {
           child: Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: ListView(
                   controller: scrollController,
                   children: [
@@ -294,9 +298,11 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                             fontSize: 18)),
                     const SizedBox(height: 8),
                     Text('Email',
-                        style: TextStyle(color: Colors.grey[700], fontSize: 15)),
+                        style:
+                            TextStyle(color: Colors.grey[700], fontSize: 15)),
                     Text(employee['email'],
-                        style: const TextStyle(color: Colors.black, fontSize: 16)),
+                        style:
+                            const TextStyle(color: Colors.black, fontSize: 16)),
                     const SizedBox(height: 28),
                     const Text('Shift Information',
                         style: TextStyle(
@@ -305,9 +311,11 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                             fontSize: 18)),
                     const SizedBox(height: 8),
                     Text('Working Hours:',
-                        style: TextStyle(color: Colors.grey[700], fontSize: 15)),
+                        style:
+                            TextStyle(color: Colors.grey[700], fontSize: 15)),
                     Text(employee['workingHours'],
-                        style: const TextStyle(color: Colors.black, fontSize: 16)),
+                        style:
+                            const TextStyle(color: Colors.black, fontSize: 16)),
                     const SizedBox(height: 28),
                     const Text('Attendance Summary',
                         style: TextStyle(
@@ -2178,7 +2186,16 @@ class AdminDashboardPage extends StatefulWidget {
 }
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
+  final EmployeeService _employeeService = EmployeeService();
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
   int selectedTabIndex = 0; // 0: Employees, 1: Attendance, 2: Settings
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future<void> _handleLogout() async {
     try {
@@ -2325,7 +2342,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? const Color(0xFF2196F3) : Colors.grey[600],
+                  color:
+                      isSelected ? const Color(0xFF2196F3) : Colors.grey[600],
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
@@ -2337,147 +2355,135 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildEmployeesTab() {
-    // Demo employee list
-    final employees = [
-      {
-        'id': '1',
-        'name': 'John Doe',
-        'role': 'Software Engineer',
-        'department': 'Engineering',
-        'startDate': '2022-01-15',
-        'avatar': 'https://randomuser.me/api/portraits/men/1.jpg',
-        'email': 'john.doe@kalamdreamlabs.com',
-        'workingHours': '09:00 -17:00',
-      },
-      {
-        'id': '2',
-        'name': 'Jane Smith',
-        'role': 'UI/UX Designer',
-        'department': 'Design',
-        'startDate': '2022-03-10',
-        'avatar': 'https://randomuser.me/api/portraits/women/2.jpg',
-        'email': 'jane.smith@kalamdreamlabs.com',
-        'workingHours': '09:00 -17:00',
-      },
-      {
-        'id': '3',
-        'name': 'Michael Johnson',
-        'role': 'Marketing Manager',
-        'department': 'Marketing',
-        'startDate': '2021-11-05',
-        'avatar': 'https://randomuser.me/api/portraits/men/3.jpg',
-        'email': 'michael.johnson@kalamdreamlabs.com',
-        'workingHours': '09:00 -17:00',
-      },
-      {
-        'id': '4',
-        'name': 'Vinod',
-        'role': 'Jr. SDE',
-        'department': 'AI&DS',
-        'startDate': '2025-05-28',
-        'avatar': 'https://randomuser.me/api/portraits/men/4.jpg',
-        'email': 'vinod@kalamdreamlabs.com',
-        'workingHours': '09:00 -17:00',
-      },
-    ];
-
     return Expanded(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text('All Employees (${employees.length})',
-                  style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold)),
-              const Spacer(),
-              SizedBox(
-                height: 40,
-                child: ElevatedButton.icon(
-                  onPressed: () => _showAddEmployeeDialog(context),
-                  icon: const Icon(Icons.person_add_alt_1,
-                      color: Colors.white, size: 20),
-                  label: const Text('Add',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2196F3),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+          // Header with Add Employee button
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search employees...',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[100],
                     ),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 18, vertical: 0),
-                    elevation: 0,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: ListView.builder(
-              itemCount: employees.length,
-              itemBuilder: (context, index) {
-                final emp = employees[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey[200]!),
-                  ),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) =>
-                            _EmployeeDetailsSheet(employee: emp),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: NetworkImage(emp['avatar']!),
-                            radius: 32,
-                          ),
-                          const SizedBox(width: 18),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(emp['name']!,
-                                    style: const TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20)),
-                                const SizedBox(height: 2),
-                                Text(emp['role']!,
-                                    style: TextStyle(
-                                        color: Colors.grey[800], fontSize: 16)),
-                                Text(emp['department']!,
-                                    style: TextStyle(
-                                        color: Colors.grey[600], fontSize: 15)),
-                                Text('Started: ${emp['startDate']!}',
-                                    style: TextStyle(
-                                        color: Colors.grey[500], fontSize: 14)),
-                              ],
-                            ),
-                          ),
-                          Icon(Icons.chevron_right,
-                              color: Colors.grey[600], size: 28),
-                        ],
+                const SizedBox(width: 12),
+                SizedBox(
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showAddEmployeeDialog(context),
+                    icon: const Icon(Icons.person_add_alt_1,
+                        color: Colors.white, size: 20),
+                    label: const Text('Add',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2196F3),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 0),
+                      elevation: 0,
                     ),
                   ),
+                ),
+              ],
+            ),
+          ),
+          // Employee list
+          Expanded(
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: _searchQuery.isEmpty
+                  ? _employeeService.getEmployees()
+                  : _employeeService.searchEmployees(_searchQuery),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text('Error: ${snapshot.error}'),
+                  );
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                final employees = snapshot.data ?? [];
+
+                if (employees.isEmpty) {
+                  return Center(
+                    child: Text(
+                      _searchQuery.isEmpty
+                          ? 'No employees found'
+                          : 'No employees match your search',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  itemCount: employees.length,
+                  itemBuilder: (context, index) {
+                    final employee = employees[index];
+                    return Card(
+                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          child: Text(
+                            (employee['name'] is String &&
+                                    employee['name'].isNotEmpty)
+                                ? employee['name'][0].toUpperCase()
+                                : '?',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        title: Text(
+                          employee['name'],
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${employee['role'] ?? ''} - ${employee['domain'] ?? ''}'
+                                  .trim(),
+                              style: TextStyle(
+                                  fontSize:
+                                      14), // Adjusted font size for subtitle clarity
+                            ),
+                            Text(
+                              'Joined: ${employee['dateOfJoining'] != null ? DateFormat('dd/MM/yyyy').format((employee['dateOfJoining'] as Timestamp).toDate()) : 'N/A'}',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                        trailing: IconButton(
+                          icon: Icon(Icons.more_vert),
+                          onPressed: () {
+                            // TODO: Show employee actions menu
+                          },
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -2574,15 +2580,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       ),
                       Text(
                         'Check In: ${record['checkIn']}',
-                        style:
-                            TextStyle(color: Colors.grey[700], fontSize: 15),
+                        style: TextStyle(color: Colors.grey[700], fontSize: 15),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
                       Text(
                         'Check Out: ${record['checkOut']}',
-                        style:
-                            TextStyle(color: Colors.grey[700], fontSize: 15),
+                        style: TextStyle(color: Colors.grey[700], fontSize: 15),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
@@ -2681,7 +2685,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             fontSize: 20)),
                     const SizedBox(height: 16),
                     Text('Address',
-                        style: TextStyle(color: Colors.grey[800], fontSize: 16)),
+                        style:
+                            TextStyle(color: Colors.grey[800], fontSize: 16)),
                     const SizedBox(height: 6),
                     TextField(
                       controller: addressController,
@@ -2706,7 +2711,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Latitude',
-                                  style: TextStyle(color: Colors.grey[800], fontSize: 16)),
+                                  style: TextStyle(
+                                      color: Colors.grey[800], fontSize: 16)),
                               const SizedBox(height: 6),
                               TextField(
                                 controller: latitudeController,
@@ -2716,7 +2722,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                   fillColor: Colors.white,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey[300]!),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[300]!),
                                   ),
                                   contentPadding: const EdgeInsets.symmetric(
                                       vertical: 16, horizontal: 12),
@@ -2732,7 +2739,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Longitude',
-                                  style: TextStyle(color: Colors.grey[800], fontSize: 16)),
+                                  style: TextStyle(
+                                      color: Colors.grey[800], fontSize: 16)),
                               const SizedBox(height: 6),
                               TextField(
                                 controller: longitudeController,
@@ -2742,7 +2750,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                   fillColor: Colors.white,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey[300]!),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[300]!),
                                   ),
                                   contentPadding: const EdgeInsets.symmetric(
                                       vertical: 16, horizontal: 12),
@@ -2756,7 +2765,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     ),
                     const SizedBox(height: 16),
                     Text('Max Check-in Distance (meters)',
-                        style: TextStyle(color: Colors.grey[800], fontSize: 16)),
+                        style:
+                            TextStyle(color: Colors.grey[800], fontSize: 16)),
                     const SizedBox(height: 6),
                     TextField(
                       controller: maxDistanceController,
@@ -2801,7 +2811,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Start Time',
-                                  style: TextStyle(color: Colors.grey[800], fontSize: 16)),
+                                  style: TextStyle(
+                                      color: Colors.grey[800], fontSize: 16)),
                               const SizedBox(height: 6),
                               GestureDetector(
                                 onTap: () async {
@@ -2817,7 +2828,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: Colors.grey[300]!),
+                                    border:
+                                        Border.all(color: Colors.grey[300]!),
                                   ),
                                   padding: const EdgeInsets.symmetric(
                                       vertical: 8, horizontal: 12),
@@ -2855,7 +2867,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('End Time',
-                                  style: TextStyle(color: Colors.grey[800], fontSize: 16)),
+                                  style: TextStyle(
+                                      color: Colors.grey[800], fontSize: 16)),
                               const SizedBox(height: 6),
                               GestureDetector(
                                 onTap: () async {
@@ -2871,7 +2884,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: Colors.grey[300]!),
+                                    border:
+                                        Border.all(color: Colors.grey[300]!),
                                   ),
                                   padding: const EdgeInsets.symmetric(
                                       vertical: 8, horizontal: 12),
@@ -3014,8 +3028,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               actions: [
                 TextButton(
                   onPressed: isLoading ? null : () => Navigator.pop(context),
-                  child: Text('Cancel',
-                      style: TextStyle(color: Colors.grey[800])),
+                  child:
+                      Text('Cancel', style: TextStyle(color: Colors.grey[800])),
                 ),
                 ElevatedButton(
                   onPressed: isLoading
@@ -3088,104 +3102,687 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   void _showAddEmployeeDialog(BuildContext context) {
     final nameController = TextEditingController();
-    final roleController = TextEditingController();
-    final departmentController = TextEditingController();
+    final phoneController = TextEditingController();
+    final emailController = TextEditingController();
     final startDateController = TextEditingController();
-    final avatarController = TextEditingController();
-    showDialog(
+    String? selectedDomain; // Changed to nullable
+    String? selectedRole; // Changed to nullable
+    TimeOfDay shiftStartTime = const TimeOfDay(hour: 9, minute: 0);
+    TimeOfDay shiftEndTime = const TimeOfDay(hour: 17, minute: 0);
+    DateTime selectedDate = DateTime.now();
+
+    // Updated Domain to roles mapping
+    final Map<String, List<String>> domainRoles = {
+      'Development': [
+        'Frontend Developer',
+        'Backend Developer',
+        'Full Stack Developer',
+        'Mobile App Developer',
+        'DevOps Engineer',
+        'QA/Testing Engineer',
+        'Game Developer',
+        'Embedded Systems Engineer',
+        'Software Architect',
+        'API Developer'
+      ],
+      'Cloud Computing': [
+        'Cloud Engineer',
+        'Cloud Architect',
+        'AWS Developer',
+        'Azure Developer',
+        'Google Cloud Engineer',
+        'DevOps (Cloud)',
+        'Cloud Security Specialist',
+        'Cloud Support Engineer',
+        'Site Reliability Engineer',
+        'Kubernetes Administrator'
+      ],
+      'Data Science': [
+        'Data Scientist',
+        'Data Analyst',
+        'Machine Learning Engineer',
+        'AI Engineer',
+        'Deep Learning Specialist',
+        'Data Engineer',
+        'NLP Engineer',
+        'Computer Vision Engineer',
+        'BI Analyst',
+        'Research Scientist'
+      ],
+      'Creative Team': [
+        'UI/UX Designer',
+        'Graphic Designer',
+        'Product Designer',
+        'Video Editor',
+        '3D Animator',
+        'Motion Graphics Designer',
+        'Content Writer',
+        'Copywriter',
+        'Brand Strategist',
+        'Creative Director'
+      ],
+      'Start-up': [
+        'Founder / Co-founder',
+        'Product Manager',
+        'Marketing Manager',
+        'Business Development Executive',
+        'Operations Manager',
+        'Customer Support',
+        'Sales Executive',
+        'Growth Hacker',
+        'Community Manager',
+        'Finance Manager'
+      ]
+    };
+
+    String? _formError; // Add this line to store the error message
+
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title:
-              const Text('Add Employee', style: TextStyle(color: Colors.black)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  style: const TextStyle(color: Colors.black),
-                  decoration: InputDecoration(
-                    labelText: 'Name',
-                    labelStyle: TextStyle(color: Colors.grey[800]),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.9,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(28)),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: roleController,
-                  style: const TextStyle(color: Colors.black),
-                  decoration: InputDecoration(
-                    labelText: 'Role',
-                    labelStyle: TextStyle(color: Colors.grey[800]),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
+                  child: Column(
+                    children: [
+                      // Handle bar
+                      Container(
+                        margin: const EdgeInsets.only(top: 12),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Add Employee',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 24,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close,
+                                  color: Colors.black, size: 28),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 24),
+                      // Form
+                      Expanded(
+                        child: SingleChildScrollView(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Full Name Field
+                              TextField(
+                                controller: nameController,
+                                style: const TextStyle(color: Colors.black),
+                                decoration: InputDecoration(
+                                  labelText: 'Full Name',
+                                  labelStyle:
+                                      TextStyle(color: Colors.grey[800]),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[300]!),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[300]!),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                        color: Color(0xFF2196F3)),
+                                  ),
+                                ),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                      RegExp(r'[a-zA-Z\s]')),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Phone Number Field
+                              TextField(
+                                controller: phoneController,
+                                style: const TextStyle(color: Colors.black),
+                                decoration: InputDecoration(
+                                  labelText: 'Phone Number',
+                                  labelStyle:
+                                      TextStyle(color: Colors.grey[800]),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[300]!),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[300]!),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                        color: Color(0xFF2196F3)),
+                                  ),
+                                ),
+                                keyboardType: TextInputType.phone,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(10),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Email Field
+                              TextField(
+                                controller: emailController,
+                                style: const TextStyle(color: Colors.black),
+                                decoration: InputDecoration(
+                                  labelText: 'Email Address',
+                                  labelStyle:
+                                      TextStyle(color: Colors.grey[800]),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[300]!),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[300]!),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                        color: Color(0xFF2196F3)),
+                                  ),
+                                ),
+                                keyboardType: TextInputType.emailAddress,
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Domain Selection with Placeholder
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          12, 8, 12, 0),
+                                      child: Text(
+                                        'Domain',
+                                        style: TextStyle(
+                                          color: Colors.grey[800],
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                    DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: selectedDomain,
+                                        isExpanded: true,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12),
+                                        icon: const Icon(Icons.arrow_drop_down),
+                                        hint: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 4),
+                                          child: Text(
+                                            'Select your domain',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                        items: domainRoles.keys
+                                            .map((String domain) {
+                                          return DropdownMenuItem<String>(
+                                            value: domain,
+                                            child: Text(
+                                              domain,
+                                              style: const TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                        onChanged: (String? newValue) {
+                                          if (newValue != null) {
+                                            setState(() {
+                                              selectedDomain = newValue;
+                                              selectedRole =
+                                                  null; // Reset role when domain changes
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Role Selection with Placeholder
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          12, 8, 12, 0),
+                                      child: Text(
+                                        'Role',
+                                        style: TextStyle(
+                                          color: Colors.grey[800],
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                    DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: selectedRole,
+                                        isExpanded: true,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12),
+                                        icon: const Icon(Icons.arrow_drop_down),
+                                        hint: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 4),
+                                          child: Text(
+                                            selectedDomain == null
+                                                ? 'Select domain first'
+                                                : 'Select your role',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                        items: selectedDomain == null
+                                            ? []
+                                            : domainRoles[selectedDomain]!
+                                                .map((String role) {
+                                                return DropdownMenuItem<String>(
+                                                  value: role,
+                                                  child: Text(
+                                                    role,
+                                                    style: const TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                );
+                                              }).toList(),
+                                        onChanged: selectedDomain == null
+                                            ? null
+                                            : (String? newValue) {
+                                                if (newValue != null) {
+                                                  setState(() {
+                                                    selectedRole = newValue;
+                                                  });
+                                                }
+                                              },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Shift Timing
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Shift Start Time',
+                                            style: TextStyle(
+                                                color: Colors.grey[800])),
+                                        const SizedBox(height: 8),
+                                        InkWell(
+                                          onTap: () async {
+                                            final TimeOfDay? picked =
+                                                await showTimePicker(
+                                              context: context,
+                                              initialTime: shiftStartTime,
+                                            );
+                                            if (picked != null) {
+                                              setState(() {
+                                                shiftStartTime = picked;
+                                              });
+                                            }
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 16),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                  color: Colors.grey[300]!),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Text(
+                                                  '${shiftStartTime.hour.toString().padLeft(2, '0')}:${shiftStartTime.minute.toString().padLeft(2, '0')}',
+                                                  style: const TextStyle(
+                                                      fontSize: 16),
+                                                ),
+                                                const Icon(Icons.access_time),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Shift End Time',
+                                            style: TextStyle(
+                                                color: Colors.grey[800])),
+                                        const SizedBox(height: 8),
+                                        InkWell(
+                                          onTap: () async {
+                                            final TimeOfDay? picked =
+                                                await showTimePicker(
+                                              context: context,
+                                              initialTime: shiftEndTime,
+                                            );
+                                            if (picked != null) {
+                                              setState(() {
+                                                shiftEndTime = picked;
+                                              });
+                                            }
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 16),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                  color: Colors.grey[300]!),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Text(
+                                                  '${shiftEndTime.hour.toString().padLeft(2, '0')}:${shiftEndTime.minute.toString().padLeft(2, '0')}',
+                                                  style: const TextStyle(
+                                                      fontSize: 16),
+                                                ),
+                                                const Icon(Icons.access_time),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Date of Joining
+                              TextField(
+                                controller: startDateController,
+                                readOnly: true,
+                                style: const TextStyle(color: Colors.black),
+                                decoration: InputDecoration(
+                                  labelText: 'Date of Joining',
+                                  labelStyle:
+                                      TextStyle(color: Colors.grey[800]),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[300]!),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide:
+                                        BorderSide(color: Colors.grey[300]!),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                        color: Color(0xFF2196F3)),
+                                  ),
+                                  suffixIcon: IconButton(
+                                    icon: const Icon(Icons.calendar_today),
+                                    onPressed: () async {
+                                      final DateTime? picked =
+                                          await showDatePicker(
+                                        context: context,
+                                        initialDate: selectedDate,
+                                        firstDate: DateTime(2000),
+                                        lastDate: DateTime.now(),
+                                      );
+                                      if (picked != null) {
+                                        setState(() {
+                                          selectedDate = picked;
+                                          startDateController.text =
+                                              '${picked.day}/${picked.month}/${picked.year}';
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+
+                              // Add Employee Button and Error Message
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        String? errorMessage;
+
+                                        // Validation checks
+                                        if (nameController.text
+                                            .trim()
+                                            .isEmpty) {
+                                          errorMessage =
+                                              'Please enter full name';
+                                        } else if (phoneController.text
+                                            .trim()
+                                            .isEmpty) {
+                                          errorMessage =
+                                              'Please enter phone number';
+                                        } else if (phoneController
+                                                .text.length !=
+                                            10) {
+                                          errorMessage =
+                                              'Phone number must be 10 digits';
+                                        } else if (emailController.text
+                                            .trim()
+                                            .isEmpty) {
+                                          errorMessage =
+                                              'Please enter email address';
+                                        } else if (!emailController.text
+                                            .contains('@')) {
+                                          errorMessage =
+                                              'Please enter a valid email address';
+                                        } else if (selectedDomain == null) {
+                                          errorMessage =
+                                              'Please select a domain';
+                                        } else if (selectedRole == null) {
+                                          errorMessage = 'Please select a role';
+                                        } else if (startDateController
+                                            .text.isEmpty) {
+                                          errorMessage =
+                                              'Please select the date of joining';
+                                        }
+
+                                        if (errorMessage != null) {
+                                          setState(
+                                              () => _formError = errorMessage);
+                                          return;
+                                        }
+
+                                        try {
+                                          // Save employee data to Firebase
+                                          await _employeeService.addEmployee(
+                                            name: nameController.text.trim(),
+                                            phone: phoneController.text.trim(),
+                                            email: emailController.text.trim(),
+                                            domain: selectedDomain!,
+                                            role: selectedRole!,
+                                            shiftStartTime:
+                                                shiftStartTime.format(context),
+                                            shiftEndTime:
+                                                shiftEndTime.format(context),
+                                            dateOfJoining: selectedDate!,
+                                          );
+
+                                          // Clear form and close dialog
+                                          nameController.clear();
+                                          phoneController.clear();
+                                          emailController.clear();
+                                          Navigator.pop(context);
+
+                                          // Show success message
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Row(
+                                                children: [
+                                                  Icon(Icons.check_circle,
+                                                      color: Colors.white),
+                                                  SizedBox(width: 8),
+                                                  Text(
+                                                      'Employee added successfully'),
+                                                ],
+                                              ),
+                                              backgroundColor: Colors.green,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                          );
+                                        } catch (e) {
+                                          setState(() => _formError =
+                                              'Failed to add employee: ${e.toString()}');
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Theme.of(context).primaryColor,
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Add Employee',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (_formError != null) ...[
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.shade50,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            color: Colors.red.shade200),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.error_outline,
+                                              color: Colors.red.shade700,
+                                              size: 20),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              _formError!,
+                                              style: TextStyle(
+                                                color: Colors.red.shade700,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: departmentController,
-                  style: const TextStyle(color: Colors.black),
-                  decoration: InputDecoration(
-                    labelText: 'Department',
-                    labelStyle: TextStyle(color: Colors.grey[800]),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: startDateController,
-                  style: const TextStyle(color: Colors.black),
-                  decoration: InputDecoration(
-                    labelText: 'Start Date (YYYY-MM-DD)',
-                    labelStyle: TextStyle(color: Colors.grey[800]),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: avatarController,
-                  style: const TextStyle(color: Colors.black),
-                  decoration: InputDecoration(
-                    labelText: 'Avatar URL',
-                    labelStyle: TextStyle(color: Colors.grey[800]),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: Colors.grey[800])),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Here you would add logic to actually add the employee
-                Navigator.pop(context);
+                );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2196F3),
-              ),
-              child: const Text('Add'),
-            ),
-          ],
+            );
+          },
         );
       },
     );

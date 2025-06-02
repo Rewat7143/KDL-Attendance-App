@@ -1,6 +1,6 @@
 // This is a generated file; do not edit or check into version control.
-FLUTTER_ROOT=/Users/minto/flutter
-FLUTTER_APPLICATION_PATH=/Users/minto/Developer/KDL-Attendance-App/kdl_attendance_app
+FLUTTER_ROOT=/Users/rewat/development/flutter
+FLUTTER_APPLICATION_PATH=/Users/rewat/Developer/KDL-Attendance-App/kdl_attendance_app
 COCOAPODS_PARALLEL_CODE_SIGN=true
 FLUTTER_BUILD_DIR=build
 FLUTTER_BUILD_NAME=1.0.0
