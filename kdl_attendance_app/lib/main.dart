@@ -229,14 +229,13 @@ class _EmployeeDetailsSheet extends StatelessWidget {
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
-            color: Color(0xFF23242A),
+            color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Stack(
             children: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: ListView(
                   controller: scrollController,
                   children: [
@@ -245,12 +244,12 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                       children: [
                         const Text('Employee Details',
                             style: TextStyle(
-                                color: Colors.white,
+                                color: Colors.black,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 22)),
                         IconButton(
                           icon: const Icon(Icons.close,
-                              color: Colors.white, size: 28),
+                              color: Colors.black, size: 28),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
@@ -269,19 +268,19 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                             children: [
                               Text(employee['name'],
                                   style: const TextStyle(
-                                      color: Colors.white,
+                                      color: Colors.black,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 22)),
                               const SizedBox(height: 4),
                               Text(employee['role'],
-                                  style: const TextStyle(
-                                      color: Colors.white70, fontSize: 16)),
+                                  style: TextStyle(
+                                      color: Colors.grey[800], fontSize: 16)),
                               Text(employee['department'],
-                                  style: const TextStyle(
-                                      color: Colors.white54, fontSize: 15)),
+                                  style: TextStyle(
+                                      color: Colors.grey[600], fontSize: 15)),
                               Text('Started: ${employee['startDate']}',
-                                  style: const TextStyle(
-                                      color: Colors.white54, fontSize: 14)),
+                                  style: TextStyle(
+                                      color: Colors.grey[500], fontSize: 14)),
                             ],
                           ),
                         ),
@@ -290,31 +289,29 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                     const SizedBox(height: 28),
                     const Text('Contact Information',
                         style: TextStyle(
-                            color: Colors.white,
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                             fontSize: 18)),
                     const SizedBox(height: 8),
-                    const Text('Email',
-                        style: TextStyle(color: Colors.white70, fontSize: 15)),
+                    Text('Email',
+                        style: TextStyle(color: Colors.grey[700], fontSize: 15)),
                     Text(employee['email'],
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 16)),
+                        style: const TextStyle(color: Colors.black, fontSize: 16)),
                     const SizedBox(height: 28),
                     const Text('Shift Information',
                         style: TextStyle(
-                            color: Colors.white,
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                             fontSize: 18)),
                     const SizedBox(height: 8),
-                    const Text('Working Hours:',
-                        style: TextStyle(color: Colors.white70, fontSize: 15)),
+                    Text('Working Hours:',
+                        style: TextStyle(color: Colors.grey[700], fontSize: 15)),
                     Text(employee['workingHours'],
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 16)),
+                        style: const TextStyle(color: Colors.black, fontSize: 16)),
                     const SizedBox(height: 28),
                     const Text('Attendance Summary',
                         style: TextStyle(
-                            color: Colors.white,
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                             fontSize: 18)),
                     const SizedBox(height: 24),
@@ -322,42 +319,42 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Column(
-                          children: const [
+                          children: [
                             Text('Present',
                                 style: TextStyle(
-                                    color: Colors.green,
+                                    color: Colors.green[700],
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16)),
-                            SizedBox(height: 4),
-                            Text('20',
+                            const SizedBox(height: 4),
+                            const Text('20',
                                 style: TextStyle(
-                                    color: Colors.white, fontSize: 18)),
+                                    color: Colors.black, fontSize: 18)),
                           ],
                         ),
                         Column(
-                          children: const [
+                          children: [
                             Text('Late',
                                 style: TextStyle(
-                                    color: Colors.orange,
+                                    color: Colors.orange[700],
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16)),
-                            SizedBox(height: 4),
-                            Text('2',
+                            const SizedBox(height: 4),
+                            const Text('2',
                                 style: TextStyle(
-                                    color: Colors.white, fontSize: 18)),
+                                    color: Colors.black, fontSize: 18)),
                           ],
                         ),
                         Column(
-                          children: const [
+                          children: [
                             Text('Absent',
                                 style: TextStyle(
-                                    color: Colors.red,
+                                    color: Colors.red[700],
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16)),
-                            SizedBox(height: 4),
-                            Text('1',
+                            const SizedBox(height: 4),
+                            const Text('1',
                                 style: TextStyle(
-                                    color: Colors.white, fontSize: 18)),
+                                    color: Colors.black, fontSize: 18)),
                           ],
                         ),
                       ],
@@ -369,15 +366,15 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                           child: OutlinedButton(
                             onPressed: () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
-                              side: const BorderSide(
-                                  color: Colors.white54, width: 2),
+                              side: BorderSide(
+                                  color: Colors.grey[400]!, width: 2),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
-                            child: const Text('Close',
+                            child: Text('Close',
                                 style: TextStyle(
-                                    color: Colors.white, fontSize: 18)),
+                                    color: Colors.grey[800], fontSize: 18)),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -2218,16 +2215,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF181A20),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF181A20),
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('Admin Dashboard',
-            style: TextStyle(color: Colors.white)),
+            style: TextStyle(color: Colors.black)),
         actions: [
           TextButton(
             onPressed: _handleLogout,
@@ -2245,17 +2242,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             // Search bar
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF23242A),
+                color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const TextField(
-                style: TextStyle(color: Colors.white),
+              child: TextField(
+                style: const TextStyle(color: Colors.black),
                 decoration: InputDecoration(
                   hintText: 'Search employees or departments...',
-                  hintStyle: TextStyle(color: Colors.grey),
+                  hintStyle: TextStyle(color: Colors.grey[600]),
                   border: InputBorder.none,
-                  prefixIcon: Icon(Icons.search, color: Colors.grey),
-                  contentPadding: EdgeInsets.symmetric(vertical: 18),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 18),
                 ),
               ),
             ),
@@ -2308,8 +2305,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(
-              color: isSelected ? const Color(0xFF2196F3) : Colors.transparent),
-          color: isSelected ? Colors.transparent : Colors.transparent,
+              color: isSelected ? const Color(0xFF2196F3) : Colors.grey[300]!),
+          color: isSelected ? Colors.blue[50] : Colors.white,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Padding(
@@ -2322,13 +2319,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     : index == 1
                         ? Icons.calendar_month
                         : Icons.settings,
-                color: isSelected ? const Color(0xFF2196F3) : Colors.grey,
+                color: isSelected ? const Color(0xFF2196F3) : Colors.grey[600],
               ),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? const Color(0xFF2196F3) : Colors.grey,
+                  color: isSelected ? const Color(0xFF2196F3) : Colors.grey[600],
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
@@ -2392,7 +2389,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             children: [
               Text('All Employees (${employees.length})',
                   style: const TextStyle(
-                      color: Colors.white,
+                      color: Colors.black,
                       fontSize: 20,
                       fontWeight: FontWeight.bold)),
               const Spacer(),
@@ -2427,8 +2424,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF23242A),
+                    color: Colors.grey[50],
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.grey[200]!),
                   ),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(20),
@@ -2458,24 +2456,24 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               children: [
                                 Text(emp['name']!,
                                     style: const TextStyle(
-                                        color: Colors.white,
+                                        color: Colors.black,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 20)),
                                 const SizedBox(height: 2),
                                 Text(emp['role']!,
-                                    style: const TextStyle(
-                                        color: Colors.white70, fontSize: 16)),
+                                    style: TextStyle(
+                                        color: Colors.grey[800], fontSize: 16)),
                                 Text(emp['department']!,
-                                    style: const TextStyle(
-                                        color: Colors.white54, fontSize: 15)),
+                                    style: TextStyle(
+                                        color: Colors.grey[600], fontSize: 15)),
                                 Text('Started: ${emp['startDate']!}',
-                                    style: const TextStyle(
-                                        color: Colors.grey, fontSize: 14)),
+                                    style: TextStyle(
+                                        color: Colors.grey[500], fontSize: 14)),
                               ],
                             ),
                           ),
-                          const Icon(Icons.chevron_right,
-                              color: Colors.white, size: 28),
+                          Icon(Icons.chevron_right,
+                              color: Colors.grey[600], size: 28),
                         ],
                       ),
                     ),
@@ -2496,7 +2494,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           const Text(
             'Recent Attendance',
             style: TextStyle(
-                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           ...attendanceRecords
@@ -2511,8 +2509,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF23242A),
+        color: Colors.grey[50],
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[200]!),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -2526,7 +2525,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   child: Text(
                     (record['date'] ?? '').toString(),
                     style: const TextStyle(
-                        color: Colors.white,
+                        color: Colors.black,
                         fontSize: 16,
                         fontWeight: FontWeight.bold),
                     overflow: TextOverflow.ellipsis,
@@ -2536,13 +2535,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.green,
+                    color: Colors.green[100],
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text(
                     'PRESENT',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: Colors.green,
                         fontWeight: FontWeight.bold,
                         fontSize: 14),
                     overflow: TextOverflow.ellipsis,
@@ -2550,7 +2549,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
               ],
             ),
-            const Divider(color: Colors.white24, height: 24),
+            Divider(color: Colors.grey[300], height: 24),
             // Employee info
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2567,7 +2566,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       Text(
                         record['name'],
                         style: const TextStyle(
-                            color: Colors.white,
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                             fontSize: 18),
                         overflow: TextOverflow.ellipsis,
@@ -2576,14 +2575,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       Text(
                         'Check In: ${record['checkIn']}',
                         style:
-                            const TextStyle(color: Colors.grey, fontSize: 15),
+                            TextStyle(color: Colors.grey[700], fontSize: 15),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
                       Text(
                         'Check Out: ${record['checkOut']}',
                         style:
-                            const TextStyle(color: Colors.grey, fontSize: 15),
+                            TextStyle(color: Colors.grey[700], fontSize: 15),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
@@ -2592,8 +2591,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text(
                             record['note'],
-                            style: const TextStyle(
-                                color: Colors.amber,
+                            style: TextStyle(
+                                color: Colors.orange[700],
                                 fontStyle: FontStyle.italic,
                                 fontSize: 15),
                             overflow: TextOverflow.ellipsis,
@@ -2612,7 +2611,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   Widget _buildSettingsTab() {
-    // Settings UI as per the provided image
     final addressController = TextEditingController(text: _address);
     final latitudeController = TextEditingController(text: _latitude);
     final longitudeController = TextEditingController(text: _longitude);
@@ -2630,15 +2628,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 margin: const EdgeInsets.only(top: 12, bottom: 18),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF23242A),
+                  color: Colors.grey[50],
                   borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: Colors.grey[200]!),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Admin Settings',
                         style: TextStyle(
-                            color: Colors.white,
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                             fontSize: 20)),
                     const SizedBox(height: 18),
@@ -2668,30 +2667,31 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 margin: const EdgeInsets.only(bottom: 18),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF23242A),
+                  color: Colors.grey[50],
                   borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: Colors.grey[200]!),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Office Location',
                         style: TextStyle(
-                            color: Colors.white,
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                             fontSize: 20)),
                     const SizedBox(height: 16),
-                    const Text('Address',
-                        style: TextStyle(color: Colors.white70, fontSize: 16)),
+                    Text('Address',
+                        style: TextStyle(color: Colors.grey[800], fontSize: 16)),
                     const SizedBox(height: 6),
                     TextField(
                       controller: addressController,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.black),
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: const Color(0xFF181A20),
+                        fillColor: Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
+                          borderSide: BorderSide(color: Colors.grey[300]!),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                             vertical: 16, horizontal: 12),
@@ -2705,19 +2705,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Latitude',
-                                  style: TextStyle(
-                                      color: Colors.white70, fontSize: 16)),
+                              Text('Latitude',
+                                  style: TextStyle(color: Colors.grey[800], fontSize: 16)),
                               const SizedBox(height: 6),
                               TextField(
                                 controller: latitudeController,
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(color: Colors.black),
                                 decoration: InputDecoration(
                                   filled: true,
-                                  fillColor: const Color(0xFF181A20),
+                                  fillColor: Colors.white,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
+                                    borderSide: BorderSide(color: Colors.grey[300]!),
                                   ),
                                   contentPadding: const EdgeInsets.symmetric(
                                       vertical: 16, horizontal: 12),
@@ -2732,19 +2731,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Longitude',
-                                  style: TextStyle(
-                                      color: Colors.white70, fontSize: 16)),
+                              Text('Longitude',
+                                  style: TextStyle(color: Colors.grey[800], fontSize: 16)),
                               const SizedBox(height: 6),
                               TextField(
                                 controller: longitudeController,
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(color: Colors.black),
                                 decoration: InputDecoration(
                                   filled: true,
-                                  fillColor: const Color(0xFF181A20),
+                                  fillColor: Colors.white,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide.none,
+                                    borderSide: BorderSide(color: Colors.grey[300]!),
                                   ),
                                   contentPadding: const EdgeInsets.symmetric(
                                       vertical: 16, horizontal: 12),
@@ -2757,18 +2755,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    const Text('Max Check-in Distance (meters)',
-                        style: TextStyle(color: Colors.white70, fontSize: 16)),
+                    Text('Max Check-in Distance (meters)',
+                        style: TextStyle(color: Colors.grey[800], fontSize: 16)),
                     const SizedBox(height: 6),
                     TextField(
                       controller: maxDistanceController,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.black),
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: const Color(0xFF181A20),
+                        fillColor: Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
+                          borderSide: BorderSide(color: Colors.grey[300]!),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                             vertical: 16, horizontal: 12),
@@ -2783,15 +2781,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 margin: const EdgeInsets.only(bottom: 18),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF23242A),
+                  color: Colors.grey[50],
                   borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: Colors.grey[200]!),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Working Hours',
                         style: TextStyle(
-                            color: Colors.white,
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                             fontSize: 20)),
                     const SizedBox(height: 16),
@@ -2801,9 +2800,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Start Time',
-                                  style: TextStyle(
-                                      color: Colors.white70, fontSize: 16)),
+                              Text('Start Time',
+                                  style: TextStyle(color: Colors.grey[800], fontSize: 16)),
                               const SizedBox(height: 6),
                               GestureDetector(
                                 onTap: () async {
@@ -2817,8 +2815,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 },
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF181A20),
+                                    color: Colors.white,
                                     borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: Colors.grey[300]!),
                                   ),
                                   padding: const EdgeInsets.symmetric(
                                       vertical: 8, horizontal: 12),
@@ -2830,18 +2829,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                               .toString()
                                               .padLeft(2, '0'),
                                           style: const TextStyle(
-                                              color: Colors.white,
+                                              color: Colors.black,
                                               fontSize: 22)),
                                       const Text(' : ',
                                           style: TextStyle(
-                                              color: Colors.white,
+                                              color: Colors.black,
                                               fontSize: 22)),
                                       Text(
                                           _startTime.minute
                                               .toString()
                                               .padLeft(2, '0'),
                                           style: const TextStyle(
-                                              color: Colors.white,
+                                              color: Colors.black,
                                               fontSize: 22)),
                                     ],
                                   ),
@@ -2855,9 +2854,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('End Time',
-                                  style: TextStyle(
-                                      color: Colors.white70, fontSize: 16)),
+                              Text('End Time',
+                                  style: TextStyle(color: Colors.grey[800], fontSize: 16)),
                               const SizedBox(height: 6),
                               GestureDetector(
                                 onTap: () async {
@@ -2871,8 +2869,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 },
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF181A20),
+                                    color: Colors.white,
                                     borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: Colors.grey[300]!),
                                   ),
                                   padding: const EdgeInsets.symmetric(
                                       vertical: 8, horizontal: 12),
@@ -2884,18 +2883,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                               .toString()
                                               .padLeft(2, '0'),
                                           style: const TextStyle(
-                                              color: Colors.white,
+                                              color: Colors.black,
                                               fontSize: 22)),
                                       const Text(' : ',
                                           style: TextStyle(
-                                              color: Colors.white,
+                                              color: Colors.black,
                                               fontSize: 22)),
                                       Text(
                                           _endTime.minute
                                               .toString()
                                               .padLeft(2, '0'),
                                           style: const TextStyle(
-                                              color: Colors.white,
+                                              color: Colors.black,
                                               fontSize: 22)),
                                     ],
                                   ),
@@ -2963,37 +2962,51 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor: const Color(0xFF23242A),
+              backgroundColor: Colors.white,
               title: const Text('Change Admin Password',
-                  style: TextStyle(color: Colors.white)),
+                  style: TextStyle(color: Colors.black)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: oldPasswordController,
                     obscureText: true,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
+                    style: const TextStyle(color: Colors.black),
+                    decoration: InputDecoration(
                       labelText: 'Current Password',
-                      labelStyle: TextStyle(color: Colors.white70),
+                      labelStyle: TextStyle(color: Colors.grey[800]),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: newPasswordController,
                     obscureText: true,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
+                    style: const TextStyle(color: Colors.black),
+                    decoration: InputDecoration(
                       labelText: 'New Password',
-                      labelStyle: TextStyle(color: Colors.white70),
+                      labelStyle: TextStyle(color: Colors.grey[800]),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: confirmPasswordController,
                     obscureText: true,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
+                    style: const TextStyle(color: Colors.black),
+                    decoration: InputDecoration(
                       labelText: 'Confirm New Password',
-                      labelStyle: TextStyle(color: Colors.white70),
+                      labelStyle: TextStyle(color: Colors.grey[800]),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
                     ),
                   ),
                 ],
@@ -3001,8 +3014,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               actions: [
                 TextButton(
                   onPressed: isLoading ? null : () => Navigator.pop(context),
-                  child: const Text('Cancel',
-                      style: TextStyle(color: Colors.grey)),
+                  child: Text('Cancel',
+                      style: TextStyle(color: Colors.grey[800])),
                 ),
                 ElevatedButton(
                   onPressed: isLoading
@@ -3083,51 +3096,75 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF23242A),
+          backgroundColor: Colors.white,
           title:
-              const Text('Add Employee', style: TextStyle(color: Colors.white)),
+              const Text('Add Employee', style: TextStyle(color: Colors.black)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  style: const TextStyle(color: Colors.black),
+                  decoration: InputDecoration(
                     labelText: 'Name',
-                    labelStyle: TextStyle(color: Colors.white70),
+                    labelStyle: TextStyle(color: Colors.grey[800]),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
                   ),
                 ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: roleController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  style: const TextStyle(color: Colors.black),
+                  decoration: InputDecoration(
                     labelText: 'Role',
-                    labelStyle: TextStyle(color: Colors.white70),
+                    labelStyle: TextStyle(color: Colors.grey[800]),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
                   ),
                 ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: departmentController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  style: const TextStyle(color: Colors.black),
+                  decoration: InputDecoration(
                     labelText: 'Department',
-                    labelStyle: TextStyle(color: Colors.white70),
+                    labelStyle: TextStyle(color: Colors.grey[800]),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
                   ),
                 ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: startDateController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  style: const TextStyle(color: Colors.black),
+                  decoration: InputDecoration(
                     labelText: 'Start Date (YYYY-MM-DD)',
-                    labelStyle: TextStyle(color: Colors.white70),
+                    labelStyle: TextStyle(color: Colors.grey[800]),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
                   ),
                 ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: avatarController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  style: const TextStyle(color: Colors.black),
+                  decoration: InputDecoration(
                     labelText: 'Avatar URL',
-                    labelStyle: TextStyle(color: Colors.white70),
+                    labelStyle: TextStyle(color: Colors.grey[800]),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
                   ),
                 ),
               ],
@@ -3136,7 +3173,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              child: Text('Cancel', style: TextStyle(color: Colors.grey[800])),
             ),
             ElevatedButton(
               onPressed: () {
