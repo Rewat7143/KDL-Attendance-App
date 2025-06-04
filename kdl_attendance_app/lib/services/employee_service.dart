@@ -67,7 +67,7 @@ class EmployeeService {
     try {
       await _firestore.collection(_collection).doc(employeeId).delete();
     } catch (e) {
-      throw Exception('Failed to delete employee: $e');
+      throw Exception('Failed to delete employee: ${e.toString()}');
     }
   }
 

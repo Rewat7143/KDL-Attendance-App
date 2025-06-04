@@ -223,6 +223,30 @@ class _EmployeeDetailsSheet extends StatelessWidget {
   final Map<String, dynamic> employee;
   const _EmployeeDetailsSheet({required this.employee});
 
+  String _formatDate(dynamic date) {
+    if (date == null) return 'N/A';
+    if (date is Timestamp) {
+      return DateFormat('MMM dd, yyyy').format(date.toDate());
+    }
+    return 'N/A';
+  }
+
+  Widget _buildAttendanceStats(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(label,
+            style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 16)),
+        const SizedBox(height: 4),
+        Text(value,
+            style: const TextStyle(
+                color: Colors.black, fontSize: 18)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
@@ -238,8 +262,7 @@ class _EmployeeDetailsSheet extends StatelessWidget {
           child: Stack(
             children: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: ListView(
                   controller: scrollController,
                   children: [
@@ -262,7 +285,7 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                     Row(
                       children: [
                         CircleAvatar(
-                          backgroundImage: NetworkImage(employee['avatar']),
+                          backgroundImage: NetworkImage(employee['avatar'] ?? 'https://ui-avatars.com/api/?name=User'),
                           radius: 36,
                         ),
                         const SizedBox(width: 20),
@@ -270,19 +293,19 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(employee['name'],
+                              Text(employee['name'] ?? 'N/A',
                                   style: const TextStyle(
                                       color: Colors.black,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 22)),
                               const SizedBox(height: 4),
-                              Text(employee['role'],
+                              Text(employee['role'] ?? 'No Role Assigned',
                                   style: TextStyle(
                                       color: Colors.grey[800], fontSize: 16)),
-                              Text(employee['department'],
+                              Text(employee['domain'] ?? 'No Domain Assigned',
                                   style: TextStyle(
                                       color: Colors.grey[600], fontSize: 15)),
-                              Text('Started: ${employee['startDate']}',
+                              Text('Started: ${_formatDate(employee['dateOfJoining'])}',
                                   style: TextStyle(
                                       color: Colors.grey[500], fontSize: 14)),
                             ],
@@ -298,11 +321,14 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                             fontSize: 18)),
                     const SizedBox(height: 8),
                     Text('Email',
-                        style:
-                            TextStyle(color: Colors.grey[700], fontSize: 15)),
-                    Text(employee['email'],
-                        style:
-                            const TextStyle(color: Colors.black, fontSize: 16)),
+                        style: TextStyle(color: Colors.grey[700], fontSize: 15)),
+                    Text(employee['email'] ?? 'No Email',
+                        style: const TextStyle(color: Colors.black, fontSize: 16)),
+                    const SizedBox(height: 8),
+                    Text('Phone',
+                        style: TextStyle(color: Colors.grey[700], fontSize: 15)),
+                    Text(employee['phone'] ?? 'No Phone',
+                        style: const TextStyle(color: Colors.black, fontSize: 16)),
                     const SizedBox(height: 28),
                     const Text('Shift Information',
                         style: TextStyle(
@@ -311,11 +337,9 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                             fontSize: 18)),
                     const SizedBox(height: 8),
                     Text('Working Hours:',
-                        style:
-                            TextStyle(color: Colors.grey[700], fontSize: 15)),
-                    Text(employee['workingHours'],
-                        style:
-                            const TextStyle(color: Colors.black, fontSize: 16)),
+                        style: TextStyle(color: Colors.grey[700], fontSize: 15)),
+                    Text('${employee['shiftStartTime'] ?? 'N/A'} - ${employee['shiftEndTime'] ?? 'N/A'}',
+                        style: const TextStyle(color: Colors.black, fontSize: 16)),
                     const SizedBox(height: 28),
                     const Text('Attendance Summary',
                         style: TextStyle(
@@ -326,45 +350,9 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Column(
-                          children: [
-                            Text('Present',
-                                style: TextStyle(
-                                    color: Colors.green[700],
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16)),
-                            const SizedBox(height: 4),
-                            const Text('20',
-                                style: TextStyle(
-                                    color: Colors.black, fontSize: 18)),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            Text('Late',
-                                style: TextStyle(
-                                    color: Colors.orange[700],
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16)),
-                            const SizedBox(height: 4),
-                            const Text('2',
-                                style: TextStyle(
-                                    color: Colors.black, fontSize: 18)),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            Text('Absent',
-                                style: TextStyle(
-                                    color: Colors.red[700],
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16)),
-                            const SizedBox(height: 4),
-                            const Text('1',
-                                style: TextStyle(
-                                    color: Colors.black, fontSize: 18)),
-                          ],
-                        ),
+                        _buildAttendanceStats('Present', '20', Colors.green[700]!),
+                        _buildAttendanceStats('Late', '2', Colors.orange[700]!),
+                        _buildAttendanceStats('Absent', '1', Colors.red[700]!),
                       ],
                     ),
                     const SizedBox(height: 32),
@@ -374,8 +362,7 @@ class _EmployeeDetailsSheet extends StatelessWidget {
                           child: OutlinedButton(
                             onPressed: () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(
-                                  color: Colors.grey[400]!, width: 2),
+                              side: BorderSide(color: Colors.grey[400]!, width: 2),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -2256,24 +2243,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            // Search bar
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: TextField(
-                style: const TextStyle(color: Colors.black),
-                decoration: InputDecoration(
-                  hintText: 'Search employees or departments...',
-                  hintStyle: TextStyle(color: Colors.grey[600]),
-                  border: InputBorder.none,
-                  prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 18),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
             // Tab bar
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -2475,11 +2444,84 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             ),
                           ],
                         ),
-                        trailing: IconButton(
-                          icon: Icon(Icons.more_vert),
-                          onPressed: () {
-                            // TODO: Show employee actions menu
+                        trailing: PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert),
+                          onSelected: (value) async {
+                            if (value == 'details') {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) => _EmployeeDetailsSheet(employee: employee),
+                              );
+                            } else if (value == 'delete') {
+                              // Show confirmation dialog
+                              bool? confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('Delete Employee'),
+                                    content: Text('Are you sure you want to delete ${employee['name']}?'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        child: const Text('Cancel'),
+                                        onPressed: () => Navigator.of(context).pop(false),
+                                      ),
+                                      TextButton(
+                                        child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                        onPressed: () => Navigator.of(context).pop(true),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+
+                              if (confirm == true) {
+                                try {
+                                  await _employeeService.deleteEmployee(employee['id']);
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Employee deleted successfully'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Error deleting employee: ${e.toString()}'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              }
+                            }
                           },
+                          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                            const PopupMenuItem<String>(
+                              value: 'details',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline),
+                                  SizedBox(width: 8),
+                                  Text('View Details'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete_outline, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('Delete', style: TextStyle(color: Colors.red)),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
