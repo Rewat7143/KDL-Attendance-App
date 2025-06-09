@@ -47,46 +47,85 @@ class AuthService {
   }
 }
 
+class AttendanceStats {
+  final double attendancePercentage;
+  final int presentDays;
+  final int lateDays;
+  final int absentDays;
+  final double workingHours;
+  final int totalDays;
+
+  AttendanceStats({
+    required this.attendancePercentage,
+    required this.presentDays,
+    required this.lateDays,
+    required this.absentDays,
+    this.workingHours = 0.0,
+    this.totalDays = 0,
+  });
+
+  factory AttendanceStats.empty() {
+    return AttendanceStats(
+      attendancePercentage: 0,
+      presentDays: 0,
+      lateDays: 0,
+      absentDays: 0,
+      workingHours: 0.0,
+      totalDays: 0,
+    );
+  }
+}
+
 class AttendanceService {
-  static const String _attendanceKey = 'attendance_records';
-  static const double _officeLatitude =
-      17.724610; // Replace with actual office coordinates
-  static const double _officeLongitude =
-      83.314066; // Replace with actual office coordinates
-  static const double _maxDistance = 200; // Maximum distance in meters
-
-  final LocalAuthentication _localAuth = LocalAuthentication();
-  late SharedPreferences _prefs;
-
-  // Singleton instance
   static final AttendanceService _instance = AttendanceService._internal();
-  factory AttendanceService() => _instance;
+  late SharedPreferences _prefs;
+  bool _initialized = false;
+  final LocalAuthentication _localAuth = LocalAuthentication();
+  
+  // Office location constants
+  static const double _officeLatitude = 17.724610; // Replace with actual office coordinates
+  static const double _officeLongitude = 83.314066; // Replace with actual office coordinates
+  static const double _maxDistance = 200; // Maximum distance in meters
+  static const String _attendanceKey = 'attendance_records';
+
+  factory AttendanceService() {
+    return _instance;
+  }
+
   AttendanceService._internal();
 
   Future<void> init() async {
+    if (_initialized) return;
     _prefs = await SharedPreferences.getInstance();
+    _initialized = true;
   }
 
-  Future<Position> getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      throw Exception('Location services are disabled.');
-    }
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        throw Exception('Location permissions are denied.');
+  Future<bool> authenticateWithFingerprint() async {
+    try {
+      bool canCheckBiometrics = await _localAuth.canCheckBiometrics;
+      if (!canCheckBiometrics) {
+        return false;
       }
-    }
 
-    return await Geolocator.getCurrentPosition();
+      return await _localAuth.authenticate(
+        localizedReason: 'Authenticate to mark attendance',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error in fingerprint authentication: $e');
+      return false;
+    }
   }
 
   Future<double> getDistanceFromOffice() async {
     try {
-      Position currentPosition = await getCurrentLocation();
+      Position currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
       double distanceInMeters = Geolocator.distanceBetween(
         currentPosition.latitude,
         currentPosition.longitude,
@@ -95,7 +134,7 @@ class AttendanceService {
       );
       return distanceInMeters;
     } catch (e) {
-      throw Exception('Failed to get distance: $e');
+      throw Exception('Failed to get location: $e');
     }
   }
 
@@ -105,25 +144,6 @@ class AttendanceService {
       return distance <= _maxDistance;
     } catch (e) {
       return false;
-    }
-  }
-
-  Future<bool> authenticateWithFingerprint() async {
-    try {
-      bool canCheckBiometrics = await _localAuth.canCheckBiometrics;
-      if (!canCheckBiometrics) {
-        throw Exception('Biometric authentication not available');
-      }
-
-      return await _localAuth.authenticate(
-        localizedReason: 'Authenticate to check in',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-        ),
-      );
-    } catch (e) {
-      throw Exception('Authentication failed: $e');
     }
   }
 
@@ -168,27 +188,32 @@ class AttendanceService {
     return 'present';
   }
 
-  AttendanceStats getAttendanceStats() {
-    List<String> records = _prefs.getStringList(_attendanceKey) ?? [];
-
-    // Get current month's records
-    String currentMonth = DateFormat('yyyy-MM').format(DateTime.now());
-    List<DateTime> monthRecords = records
-        .map((r) => DateTime.parse(r))
-        .where((date) => DateFormat('yyyy-MM').format(date) == currentMonth)
-        .toList();
-
-    int totalDays = DateTime.now().day;
-    int presentDays = monthRecords.length;
-    int lateDays = 0; // Implement late day counting logic
-    int absentDays = totalDays - presentDays;
-    double attendancePercentage = (presentDays / totalDays) * 100;
-
+  Future<AttendanceStats> getAttendanceStats() async {
+    if (!_initialized) {
+      await init();
+    }
+    
+    // Get the current month's dates
+    final now = DateTime.now();
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    
+    // Get attendance data from SharedPreferences
+    final presentDays = _prefs.getInt('presentDays_${now.month}_${now.year}') ?? 0;
+    final lateDays = _prefs.getInt('lateDays_${now.month}_${now.year}') ?? 0;
+    final absentDays = _prefs.getInt('absentDays_${now.month}_${now.year}') ?? 0;
+    final totalWorkingHours = _prefs.getDouble('workingHours_${now.month}_${now.year}') ?? 0.0;
+    
+    // Calculate attendance percentage
+    final totalDays = daysInMonth;
+    final attendancePercentage = ((presentDays + lateDays) / totalDays) * 100;
+    
     return AttendanceStats(
       attendancePercentage: attendancePercentage,
       presentDays: presentDays,
       lateDays: lateDays,
       absentDays: absentDays,
+      workingHours: totalWorkingHours,
+      totalDays: totalDays,
     );
   }
 
@@ -202,20 +227,6 @@ class AttendanceService {
     int presentDays = records.length;
     return '$presentDays/31';
   }
-}
-
-class AttendanceStats {
-  final double attendancePercentage;
-  final int presentDays;
-  final int lateDays;
-  final int absentDays;
-
-  AttendanceStats({
-    required this.attendancePercentage,
-    required this.presentDays,
-    required this.lateDays,
-    required this.absentDays,
-  });
 }
 
 // Add this at the top level, before MyApp class
@@ -1410,6 +1421,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
   bool _isInitialized = false;
   double _distanceFromOffice = 0;
   DateTime _currentTime = DateTime.now();
+  int _currentIndex = 0;
   AttendanceStats _stats = AttendanceStats(
     attendancePercentage: 0,
     presentDays: 0,
@@ -1423,8 +1435,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
   @override
   void initState() {
     super.initState();
-    _initializeAttendance();
-    _startClock();
+    _initializeData();
   }
 
   @override
@@ -1435,52 +1446,42 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
     super.dispose();
   }
 
-  void _startClock() {
-    _clockTimer?.cancel();
-    // Update time every second
-    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {
-          _currentTime = DateTime.now();
-        });
-      }
-    });
-  }
-
-  Future<void> _initializeAttendance() async {
-    if (_isInitialized) return;
-
+  Future<void> _initializeData() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
     try {
-      await _attendanceService.init();
       await _updateLocation();
-      _updateStats();
-
-      // Start periodic updates only after initial setup
-      _startLocationUpdates();
-      _startStatsUpdates();
-
-      if (mounted) {
-        setState(() {
-          _isInitialized = true;
-        });
-      }
+      await _updateStats();
+      _startTimers();
+      if (!mounted) return;
+      setState(() => _isInitialized = true);
     } catch (e) {
-      debugPrint('Initialization error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
     }
   }
 
-  void _startLocationUpdates() {
-    _locationTimer?.cancel();
-    _locationTimer = Timer.periodic(const Duration(minutes: 1), (_) {
-      _updateLocation();
-    });
-  }
-
-  void _startStatsUpdates() {
-    _statsTimer?.cancel();
-    _statsTimer = Timer.periodic(const Duration(minutes: 15), (_) {
-      _updateStats();
-    });
+  void _startTimers() {
+    _locationTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _updateLocation(),
+    );
+    _statsTimer = Timer.periodic(
+      const Duration(minutes: 15),
+      (_) => _updateStats(),
+    );
+    _clockTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) {
+        if (!mounted) return;
+        setState(() => _currentTime = DateTime.now());
+      },
+    );
   }
 
   Future<void> _updateLocation() async {
@@ -1501,12 +1502,18 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
     }
   }
 
-  void _updateStats() {
+  Future<void> _updateStats() async {
     if (!mounted) return;
-
-    setState(() {
-      _stats = _attendanceService.getAttendanceStats();
-    });
+    try {
+      final stats = await _attendanceService.getAttendanceStats();
+      if (!mounted) return;
+      setState(() {
+        _stats = stats;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      debugPrint('Error updating stats: $e');
+    }
   }
 
   Future<void> _handleCheckIn() async {
@@ -1677,25 +1684,9 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
       );
     }
 
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_currentTime);
-    String formattedTime = DateFormat('h:mm a').format(_currentTime);
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          'Dashboard',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
+    final List<Widget> pages = [
+      // Home page content
+      SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -1767,7 +1758,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                           color: Colors.blue, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        formattedDate,
+                        DateFormat('yyyy-MM-dd').format(_currentTime),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
@@ -1781,7 +1772,7 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
                           color: Colors.blue, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        formattedTime,
+                        DateFormat('h:mm a').format(_currentTime),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
@@ -2036,11 +2027,36 @@ class _EmployeeDashboardState extends State<EmployeeDashboard> {
           ),
         ),
       ),
+      const HistoryPage(),
+      ProfilePage(
+        userName: widget.userName,
+        email: 'john.doe@kalamdreamlabs.com', // TODO: Get from user data
+        phone: '+1 (555) 123-4567', // TODO: Get from user data
+        department: 'Engineering', // TODO: Get from user data
+        location: 'Kalam Dream Labs HQ', // TODO: Get from user data
+        stats: _stats,
+        role: 'Software Engineer', // TODO: Get from user data
+        isAdmin: true, // TODO: Get from user data
+      ),
+      const Center(child: Text('Settings')),
+    ];
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: IndexedStack(
+        index: _currentIndex,
+        children: pages,
+      ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
+        currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -3831,217 +3847,863 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 }
 
-// Placeholder for employee attendance page with demo data
-class EmployeeAttendancePage extends StatelessWidget {
-  final Map<String, dynamic> employee;
-  const EmployeeAttendancePage({super.key, required this.employee});
+class ProfilePage extends StatefulWidget {
+  final String userName;
+  final String role;
+  final bool isAdmin;
+  final String email;
+  final String phone;
+  final String department;
+  final String location;
+  final AttendanceStats stats;
+
+  const ProfilePage({
+    super.key,
+    required this.userName,
+    required this.email,
+    required this.phone,
+    required this.department,
+    required this.location,
+    required this.stats,
+    this.role = 'Software Engineer',
+    this.isAdmin = false,
+  });
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  bool _isLoading = false;
+  late final String _userName;
+  late final String _role;
+  late final bool _isAdmin;
+  late final String _email;
+  late final String _phone;
+  late final String _department;
+  late final String _location;
+  late final AttendanceStats _stats;
+
+  @override
+  void initState() {
+    super.initState();
+    _userName = widget.userName;
+    _role = widget.role;
+    _isAdmin = widget.isAdmin;
+    _email = widget.email;
+    _phone = widget.phone;
+    _department = widget.department;
+    _location = widget.location;
+    _stats = widget.stats;
+  }
+
+  @override
+  void dispose() {
+    // Clean up any resources
+    super.dispose();
+  }
+
+  Future<void> _handleEditProfile() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      // TODO: Implement edit profile logic
+      await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleViewHistory() async {
+    if (!mounted) return;
+    try {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HistoryPage(),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Demo attendance data for each employee
-    final List<Map<String, String>> attendance = [
-      {
-        'date': '2024-06-01',
-        'checkIn': '09:05 AM',
-        'checkOut': '05:45 PM',
-        'status': 'Present',
-      },
-      {
-        'date': '2024-05-31',
-        'checkIn': '09:20 AM',
-        'checkOut': '05:30 PM',
-        'status': 'Late',
-      },
-      {
-        'date': '2024-05-30',
-        'checkIn': '09:00 AM',
-        'checkOut': '05:50 PM',
-        'status': 'Present',
-      },
-      {
-        'date': '2024-05-29',
-        'checkIn': 'Absent',
-        'checkOut': '-',
-        'status': 'Absent',
-      },
-      {
-        'date': '2024-05-28',
-        'checkIn': '09:10 AM',
-        'checkOut': '05:40 PM',
-        'status': 'Present',
-      },
-    ];
-
-    Color statusColor(String status) {
-      switch (status) {
-        case 'Present':
-          return Colors.green;
-        case 'Late':
-          return Colors.orange;
-        case 'Absent':
-          return Colors.red;
-        default:
-          return Colors.grey;
-      }
-    }
-
+    final currentMonth = DateFormat('MMMM yyyy').format(DateTime.now());
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF181A20),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF181A20),
+        backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 28),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '${employee['name']} Attendance',
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22),
+        title: const Text(
+          'Profile',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Employee Profile Card
-            Container(
-              padding: const EdgeInsets.all(20),
-              margin: const EdgeInsets.only(bottom: 24),
-              decoration: BoxDecoration(
-                color: const Color(0xFF23242A),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundImage: employee['avatar'] != null
-                        ? NetworkImage(employee['avatar'])
-                        : null,
-                    radius: 36,
-                    backgroundColor: Colors.white24,
-                  ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    // Profile Image with Edit Button
+                    Stack(
+                      alignment: Alignment.bottomRight,
                       children: [
-                        Text(employee['name'],
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 22)),
-                        const SizedBox(height: 4),
-                        Text(employee['role'],
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 16)),
-                        Text(employee['department'],
-                            style: const TextStyle(
-                                color: Colors.white54, fontSize: 15)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Text('Attendance Records',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18)),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView.separated(
-                itemCount: attendance.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 14),
-                itemBuilder: (context, index) {
-                  final record = attendance[index];
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF23242A),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.10),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16, horizontal: 18),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Status Dot
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: statusColor(record['status'] ?? ''),
-                              shape: BoxShape.circle,
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.blue,
+                              width: 4,
+                            ),
+                          ),
+                          child: CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Colors.blue.shade100,
+                            backgroundImage: const NetworkImage(
+                              'https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=200&q=80',
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        // Attendance Info
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      record['date'] ?? '',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 17,
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    record['status'] ?? '',
-                                    style: TextStyle(
-                                      color:
-                                          statusColor(record['status'] ?? ''),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ],
+                        Material(
+                          color: Colors.blue,
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            onTap: () {
+                              // TODO: Handle profile image update
+                            },
+                            customBorder: const CircleBorder(),
+                            child: const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 20,
                               ),
-                              const SizedBox(height: 4),
-                              Text('Check In: ${record['checkIn']}',
-                                  style: const TextStyle(
-                                      color: Colors.white70, fontSize: 15)),
-                              Text('Check Out: ${record['checkOut']}',
-                                  style: const TextStyle(
-                                      color: Colors.white70, fontSize: 15)),
-                            ],
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  );
-                },
+                    const SizedBox(height: 16),
+                    // Name and Role
+                    Text(
+                      _userName,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _role,
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (_isAdmin)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green[100],
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Admin',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+                    // Edit Profile Button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: OutlinedButton.icon(
+                        onPressed: _handleEditProfile,
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Edit Profile'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.blue,
+                          side: const BorderSide(color: Colors.blue),
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    // Contact Information Section
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Contact Information',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInfoTile(
+                      icon: Icons.email_outlined,
+                      label: 'Email',
+                      value: _email,
+                      iconColor: Colors.blue,
+                    ),
+                    _buildInfoTile(
+                      icon: Icons.phone_outlined,
+                      label: 'Phone',
+                      value: _phone,
+                      iconColor: Colors.blue,
+                    ),
+                    const SizedBox(height: 32),
+                    // Work Information Section
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Work Information',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInfoTile(
+                      icon: Icons.business_outlined,
+                      label: 'Department',
+                      value: _department,
+                      iconColor: Colors.blue,
+                    ),
+                    _buildInfoTile(
+                      icon: Icons.work_outline,
+                      label: 'Position',
+                      value: _role,
+                      iconColor: Colors.blue,
+                    ),
+                    _buildInfoTile(
+                      icon: Icons.location_on_outlined,
+                      label: 'Location',
+                      value: _location,
+                      iconColor: Colors.blue,
+                    ),
+                    const SizedBox(height: 32),
+                    // Attendance Summary Section
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Attendance Summary',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                currentMonth,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.blue[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _buildAttendanceStats(
+                                value: '${_stats.attendancePercentage}%',
+                                label: 'Attendance',
+                                color: Colors.blue,
+                              ),
+                              _buildAttendanceStats(
+                                value: _stats.presentDays.toString(),
+                                label: 'Present',
+                                color: Colors.green,
+                              ),
+                              _buildAttendanceStats(
+                                value: _stats.lateDays.toString(),
+                                label: 'Late',
+                                color: Colors.orange,
+                              ),
+                              _buildAttendanceStats(
+                                value: _stats.absentDays.toString(),
+                                label: 'Absent',
+                                color: Colors.red,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildWorkingStats(
+                                  icon: Icons.access_time,
+                                  label: 'Working Hours',
+                                  value: '${_stats.workingHours.toStringAsFixed(1)} hrs',
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildWorkingStats(
+                                  icon: Icons.calendar_today,
+                                  label: 'Working Days',
+                                  value: '${_stats.presentDays}/${_stats.totalDays} days',
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _handleViewHistory,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'View Attendance History',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
             ),
+    );
+  }
+
+  Widget _buildInfoTile({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color iconColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, color: iconColor, size: 24),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAttendanceStats({
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      width: 70,
+      height: 70,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        shape: BoxShape.circle,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorkingStats({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.blue, size: 24),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HistoryPage extends StatefulWidget {
+  const HistoryPage({super.key});
+
+  @override
+  State<HistoryPage> createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends State<HistoryPage> {
+  String selectedFilter = 'Present';
+  List<String> filters = ['Present', 'Late', 'Absent'];
+  String selectedMonth = DateFormat('MMMM yyyy').format(DateTime.now());
+  bool _isLoading = false;
+
+  // Example attendance records
+  final List<Map<String, dynamic>> attendanceRecords = [
+    {
+      'date': '2025-05-28',
+      'checkIn': '4:48 PM',
+      'checkOut': '4:48 PM',
+      'status': 'PRESENT',
+      'locationRecorded': true,
+      'fingerprintVerified': true,
+    },
+    {
+      'date': '2025-05-27',
+      'checkIn': '9:05 AM',
+      'checkOut': '5:30 PM',
+      'status': 'PRESENT',
+      'locationRecorded': true,
+      'fingerprintVerified': true,
+    },
+    {
+      'date': '2025-05-26',
+      'checkIn': '9:35 AM',
+      'checkOut': '5:45 PM',
+      'status': 'LATE',
+      'locationRecorded': true,
+      'fingerprintVerified': true,
+    },
+    {
+      'date': '2025-05-25',
+      'checkIn': '-',
+      'checkOut': '-',
+      'status': 'ABSENT',
+      'locationRecorded': false,
+      'fingerprintVerified': false,
+    },
+  ];
+
+  List<Map<String, dynamic>> get filteredRecords {
+    if (selectedFilter == 'All') return attendanceRecords;
+    return attendanceRecords.where((record) {
+      return record['status'] == selectedFilter.toUpperCase();
+    }).toList();
+  }
+
+  Future<void> _exportCSV() async {
+    setState(() => _isLoading = true);
+    try {
+      // TODO: Implement CSV export
+      await Future.delayed(const Duration(seconds: 1)); // Simulate export
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('CSV exported successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error exporting CSV: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildAttendanceCard(Map<String, dynamic> record) {
+    final Color statusColor = record['status'] == 'PRESENT'
+        ? Colors.green
+        : record['status'] == 'LATE'
+            ? Colors.orange
+            : Colors.red;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.calendar_today, size: 16, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  Text(
+                    record['date'],
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  record['status'],
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Check In',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      record['checkIn'],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Check Out',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      record['checkOut'],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (record['status'] != 'ABSENT') ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.location_on,
+                  size: 16,
+                  color: record['locationRecorded'] ? Colors.green : Colors.grey,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Location recorded',
+                  style: TextStyle(
+                    color: record['locationRecorded'] ? Colors.green : Colors.grey,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(
+                  Icons.fingerprint,
+                  size: 16,
+                  color: record['fingerprintVerified'] ? Colors.green : Colors.grey,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Fingerprint verification',
+                  style: TextStyle(
+                    color: record['fingerprintVerified'] ? Colors.green : Colors.grey,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ],
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'History',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          // Month selector and Export button
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_month, color: Colors.blue, size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      selectedMonth,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _exportCSV,
+                  icon: _isLoading 
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.download, color: Colors.white),
+                  label: Text(_isLoading ? 'Exporting...' : 'Export CSV'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Filter chips
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              children: [
+                const Text(
+                  'Filter:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        FilterChip(
+                          label: const Text('All'),
+                          selected: selectedFilter == 'All',
+                          onSelected: (bool selected) {
+                            setState(() {
+                              selectedFilter = 'All';
+                            });
+                          },
+                          backgroundColor: Colors.grey[100],
+                          selectedColor: Colors.blue[100],
+                          checkmarkColor: Colors.blue,
+                          labelStyle: TextStyle(
+                            color: selectedFilter == 'All' ? Colors.blue : Colors.black,
+                            fontWeight: selectedFilter == 'All' ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ...filters.map((filter) {
+                          final isSelected = selectedFilter == filter;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: FilterChip(
+                              label: Text(filter),
+                              selected: isSelected,
+                              onSelected: (bool selected) {
+                                setState(() {
+                                  selectedFilter = filter;
+                                });
+                              },
+                              backgroundColor: Colors.grey[100],
+                              selectedColor: Colors.blue[100],
+                              checkmarkColor: Colors.blue,
+                              labelStyle: TextStyle(
+                                color: isSelected ? Colors.blue : Colors.black,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Attendance records list
+          Expanded(
+            child: filteredRecords.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.history, size: 64, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No attendance records found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredRecords.length,
+                    itemBuilder: (context, index) => _buildAttendanceCard(filteredRecords[index]),
+                  ),
+          ),
+        ],
       ),
     );
   }

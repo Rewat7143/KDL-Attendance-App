@@ -17,7 +17,9 @@
     "ios": "11.0"
   },
   "dependencies": {
-    "Flutter": [],
+    "Flutter": [
+
+    ],
     "Firebase/CoreOnly": [
       "10.25.0"
     ]
